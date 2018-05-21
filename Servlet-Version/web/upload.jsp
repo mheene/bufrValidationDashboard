@@ -16,12 +16,12 @@
     integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
     crossorigin="anonymous">
     
-    <title>BUFR Viewer</title>
+    <title>BUFR Validation Dashboard</title>
   </head>
   <body>
 	<div class="container" id="main">
 	     <div>
-		<h3>BUFR Viewer</h3>
+		<h3>BUFR  Validation Dashboard</h3>
     	     </div>
 
 	  <div class="container" id="upload">
@@ -33,13 +33,27 @@
   		      </p>
           	</form>
 	   </div>
-    
+<!--    
 	  <div class="accordion" id="accordion">
 	     <c:catch var="exception">${bufr}</c:catch>
 	     <c:if test="!${exception}">${bufr}</c:if>	
 	     <c:if test="${exception}">${exception}</c:if>	
     	  </div>
-	
+	  -->
+
+	  <div>
+
+		      <c:out value="Filename: ${bufr.fileName}"/><br>
+		      <c:out value="File Size: ${bufr.fileSize}"/><br>
+		      <c:out value="Messages: ${bufr.messages}"/><br>
+		      <p>
+		      <c:forEach items="${bufr.decoderResults}" var="decoderResult">
+    			   <c:out value="Decoder: ${decoderResult.decoder}"/>
+			   <c:out value="Status: ${decoderResult.status}"/>
+			   <c:out value="Error: ${decoderResult.error}"/>
+			   <br/>
+		      </c:forEach>
+
 	</div>
     
 

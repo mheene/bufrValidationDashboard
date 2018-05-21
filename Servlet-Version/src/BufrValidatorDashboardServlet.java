@@ -8,11 +8,13 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.HashMap;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -50,6 +52,9 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.text.StringEscapeUtils;
 
 import org.apache.commons.io.IOUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * A Java servlet that handles file upload from client.
@@ -123,13 +128,16 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
             // parses the request's content to extract file data
             //@SuppressWarnings("unchecked")
             List<FileItem> formItems = upload.parseRequest(request);
- 
+	    String fileName = null;
+	    long fileSize = -1;
+	    String md5ChkSum = null;
             if (formItems != null && formItems.size() > 0) {
                 // iterates over form's fields
                 for (FileItem item : formItems) {
                     // processes only fields that are not form fields
                     if (!item.isFormField()) {
-                        String fileName = new File(item.getName()).getName();
+                        fileName = new File(item.getName()).getName();
+			fileSize = item.getSize();
 			if (Boolean.valueOf(getServletConfig().getInitParameter("storeFiles"))) {
 			    String filePath = uploadPath + File.separator + fileName;
 			    File storeFile = new File(filePath);
@@ -146,14 +154,15 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			out.flush();
 						
 			StringBuffer sb = new StringBuffer();
+			HashMap <String, String> responseMap = new HashMap<String, String>();
 			executor = Executors.newFixedThreadPool(4);
 						
 			//List<GetRequestTask> tasks = new ArrayList<GetRequestTask>();
 			List<IfcRequestTask> tasks = new ArrayList<IfcRequestTask>();
-			//tasks.add(new GetRequestTask("http://localhost:8080/examples/jsp/jsp2/el/basic-arithmetic.jsp", this.executor));
-			//tasks.add(new GetRequestTask("http://localhost:8080/examples/jsp/jsp2/el/basic-comparisons.jsp", this.executor));
-			tasks.add(new PostRequestTask("http://apps.ecmwf.int/codes/bufr/validator/", fileName, "filebox", tempFile, this.executor));
-			tasks.add(new PostRequestTask("https://kunden.dwd.de/bufrviewer/uploadFile", fileName, "uploadFile",tempFile, this.executor));
+			//List<IfcRequestTask> tasks = new CopyOnWriteArrayList<IfcRequestTask>();
+			tasks.add(new PostRequestTask("ecCodes", "http://apps.ecmwf.int/codes/bufr/validator/", fileName, "filebox", tempFile, this.executor));
+			tasks.add(new PostRequestTask("globus", "https://kunden.dwd.de/bufrviewer/uploadFile", fileName, "uploadFile",tempFile, this.executor));
+			tasks.add(new PostRequestTask("pybufrkit", "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile", fileName, "file",tempFile, this.executor));
 			//...
 			//do other work here
 			//...
@@ -175,21 +184,23 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 				    //PUT YOUR CODE HERE
 				    //possibly aggregate request and response in Map<String,String>
 				    //or do something else with request and response
-				    sb.append("Request: " + p_request + "\n");
-				    sb.append("Response: " + p_response + "\n");
+				    sb.append("Request: " + p_request + " Decoder: " + task.getDecoder() + "\n");
+				    //sb.append("Response: " + p_response + "\n");
 				    if (m.find()) {
 					url = m.group();
 					foundUrl = true;
 					//sb.append("Matcher ECMWF: " + m.group());
-
+				    } else {
+					responseMap.put(task.getDecoder(),p_response);
 				    }
+				    
 				    it.remove();
 				}
 			    }
 			    //avoid tight loop in "main" thread
 			    if(!tasks.isEmpty()) Thread.sleep(100);
 			    if (foundUrl) {
-				tasks.add(new GetRequestTask(url, this.executor));
+				tasks.add(new GetRequestTask("ecCodes", url, this.executor));
 				Thread.sleep(100);
 			    }
 			}
@@ -199,7 +210,14 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			//note: you should probably pass the responses from above
 			//to this next method (to keep your controller stateless)
 			//String results = doWorkwithMultipleDataReturned();
-			request.setAttribute("bufr", sb.toString()); 
+			Result result = new Result(fileName, fileSize, md5ChkSum, 1);
+			result = processResponse(result, responseMap);
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			String json;
+			json = gson.toJson(result);
+			//request.setAttribute("bufr", json);
+			request.setAttribute("bufr", result);
+			//request.setAttribute("bufr", sb.toString()); 
 			//model.addAttribute(results, results);
 			//return "index";
 
@@ -227,17 +245,53 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 
     }
+
+
+    public Result processResponse (Result p_result, HashMap<String,String> p_mapResponse) {
+	Result result = p_result;
 	
+	String globusResponse = p_mapResponse.get("globus");
+	System.out.println("GlobusResponse: " + globusResponse);
+	if (globusResponse.contains("BUFR error")) {
+	    result.addDecoderResult("globus", false, "Error: xxx");
+	} else {
+	    result.addDecoderResult("globus", true, null);
+	}
+
+	String ecCodesResponse = p_mapResponse.get("ecCodes");
+
+	if (ecCodesResponse.contains("Error")) {
+	    result.addDecoderResult("ecCodes", false, "Error: xxx");
+	    System.out.println("ecCodesResponse: " + ecCodesResponse);
+	} else {
+	    result.addDecoderResult("ecCodes", true, null);
+	}
+
+	String pybufrKitResponse = p_mapResponse.get("pybufrkit");
+
+	if (pybufrKitResponse.contains("\"status\": \"error\"")) {
+	    result.addDecoderResult("pybufrkit", false, "Error: xxx");
+	    System.out.println("pybufrkitResponse: " + pybufrKitResponse);
+	} else {
+	    result.addDecoderResult("pybufrkit", true, null);
+	}   
+	return result;
+    }
+
+    
     interface IfcRequestTask {
 	public String getRequest();
 	public boolean isDone();
 	public String getResponse();
+	public String getDecoder();
     }
 	
     class GetRequestTask implements IfcRequestTask {
         private GetRequestWork work;
         private FutureTask<String> task;
-        public GetRequestTask(String url, Executor executor) {
+	private String decoder;
+        public GetRequestTask( String decoder, String url, Executor executor) {
+	    this.decoder = decoder;
             this.work = new GetRequestWork(url);
             this.task = new FutureTask<String>(work);
             executor.execute(this.task);
@@ -248,6 +302,11 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
         public boolean isDone() {
             return this.task.isDone();
         }
+
+	public String getDecoder() {
+	    return this.decoder;
+	}
+	
         public String getResponse() {
             try {
                 return this.task.get();
@@ -274,12 +333,19 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     class PostRequestTask implements IfcRequestTask{
         private PostRequestWork work;
         private FutureTask<String> task;
-		
-        public PostRequestTask(String url, String p_fileName, String p_fieldName, File p_file, Executor executor) {
+	private String decoder;
+	
+        public PostRequestTask(String decoder, String url, String p_fileName, String p_fieldName, File p_file, Executor executor) {
             this.work = new PostRequestWork(url, p_fileName, p_fieldName, p_file);
             this.task = new FutureTask<String>(work);
-            executor.execute(this.task);
+	    this.decoder = decoder;
+	    executor.execute(this.task);
         }
+
+	public String getDecoder() {
+	    return this.decoder;
+	}
+	
         public String getRequest() {
             return this.work.getUrl();
         }
