@@ -17,11 +17,4 @@ You will find the distribution in the directory dist.
 
 Notes:
 ======
-<<<<<<< HEAD
-Please note it is an inital commit and for discussion purpose only. Some value/functions are not implemented now (e.g. number of messages in a BUFR, MD5 Checksum, ...)
-
-
-=======
-Please note it is an inital commit and for discussion purpose only. Some value/functions are not implemente
-d now (e.g. number of messages in a BUFR, MD5 Checksum, ...)
->>>>>>> 6e6da901f24d466562db1246581dc49a97fca3b5
+Please note that this is an inital commit for discussion purposes only. Some values/functions are not fully implemented now (e.g. number of messages in a BUFR, ...)
