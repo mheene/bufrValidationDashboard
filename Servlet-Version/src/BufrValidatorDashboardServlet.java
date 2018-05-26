@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
 
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -20,6 +21,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -44,6 +46,8 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -71,9 +75,56 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     private static final int MEMORY_THRESHOLD   = 1024 * 1024 * 10;  // 10 MB
     private static final int MAX_FILE_SIZE      = 1024 * 1024 * 10; // 10 MB
     private static final int MAX_REQUEST_SIZE   = 1024 * 1024 * 20; // 20 MB
- 
+    public static final String ECCODES_URL = "http://apps.ecmwf.int/codes/bufr/validator/";
+    public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/uploadFile";
+    // DWD JSON Service - not yet released
+    //public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/validatorFile";
+    public static final String PYBUFRKIT_URL = "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile";
+    public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
+
+    public static final String GLOBUS = "BUFR Tools (DWD)";
+    public static final String ECCODES = "ecCodes (ECMWF)";
+    public static final String PYBUFRKIT = "PyBufrKit";
+
+
+    public static final HashMap<String, String> DECODER_MAP;
+    
+    static {
+
+	DECODER_MAP = new HashMap<String, String>();
+	DECODER_MAP.put(GLOBUS, "https://kunden.dwd.de/bufrviewer");
+	DECODER_MAP.put(ECCODES, ECCODES_URL);
+	DECODER_MAP.put(PYBUFRKIT,  "http://aws-bufr-webapp.s3-website-ap-southeast-2.amazonaws.com");
+    }
+
     private Executor executor;	
- 
+    private DefaultProxyRoutePlanner routePlanner = null;
+
+    public void init(ServletConfig config) throws ServletException {
+	super.init(config);
+	System.out.println("Init: call");
+
+	String proxyHost = getServletConfig().getInitParameter("proxyHost");
+	String proxyPort = getServletConfig().getInitParameter("proxyPort");
+
+	System.out.println("ProxyHost: " + proxyHost);
+	System.out.println("ProxyPort: " + proxyPort);
+
+	if (proxyHost != null) {
+	    try {
+		HttpHost proxy = new HttpHost(proxyHost, Integer.parseInt(proxyPort));
+		routePlanner = new DefaultProxyRoutePlanner(proxy);
+	    } catch (NumberFormatException nfe) {
+		System.err.println(nfe.toString());
+		throw new ServletException(nfe.toString());
+	    }
+	}
+
+
+    }
+
+    
+
     /**
      * Upon receiving file upload submission, parses the request to read
      * upload data and saves the file on disk.
@@ -81,7 +132,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request,
 			  HttpServletResponse response) throws ServletException, IOException {
         // checks if the request actually contains upload file
-	// error.jsp noch einbauen
+	// integrated error.jsp 
         if (!ServletFileUpload.isMultipartContent(request)) {
             // if not, we stop here
             PrintWriter writer = response.getWriter();
@@ -136,7 +187,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
                 for (FileItem item : formItems) {
                     // processes only fields that are not form fields
                     if (!item.isFormField()) {
-                        fileName = new File(item.getName()).getName();
+                        fileName = item.getName();
 			fileSize = item.getSize();
 			if (Boolean.valueOf(getServletConfig().getInitParameter("storeFiles"))) {
 			    String filePath = uploadPath + File.separator + fileName;
@@ -148,42 +199,35 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			InputStream is = item.getInputStream();
 						
 			File tempFile = File.createTempFile("prefix-", "-suffix");
-			//tempFile.deleteOnExit();
+			tempFile.deleteOnExit();
 			FileOutputStream out = new FileOutputStream(tempFile);
 			IOUtils.copy(is, out);
 			out.flush();
-						
+				
+			md5ChkSum = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
 			StringBuffer sb = new StringBuffer();
 			HashMap <String, String> responseMap = new HashMap<String, String>();
 			executor = Executors.newFixedThreadPool(4);
 						
-			//List<GetRequestTask> tasks = new ArrayList<GetRequestTask>();
+
 			List<IfcRequestTask> tasks = new ArrayList<IfcRequestTask>();
 			//List<IfcRequestTask> tasks = new CopyOnWriteArrayList<IfcRequestTask>();
-			tasks.add(new PostRequestTask("ecCodes", "http://apps.ecmwf.int/codes/bufr/validator/", fileName, "filebox", tempFile, this.executor));
-			tasks.add(new PostRequestTask("globus", "https://kunden.dwd.de/bufrviewer/uploadFile", fileName, "uploadFile",tempFile, this.executor));
-			tasks.add(new PostRequestTask("pybufrkit", "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile", fileName, "file",tempFile, this.executor));
-			//...
-			//do other work here
-			//...
+			tasks.add(new PostRequestTask(ECCODES, ECCODES_URL, fileName, "filebox", tempFile, this.executor));
+			tasks.add(new PostRequestTask(GLOBUS, DWD_URL, fileName, "uploadFile",tempFile, this.executor));
+			tasks.add(new PostRequestTask(PYBUFRKIT, PYBUFRKIT_URL, fileName, "file",tempFile, this.executor));
 			//now wait for all async tasks to complete
-			Pattern p = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
-
 			while(!tasks.isEmpty()) {
-			    //for(Iterator<GetRequestTask> it = tasks.iterator(); it.hasNext();) {
+
 			    String url = null;
 			    boolean foundUrl = false;
 			    for(Iterator<IfcRequestTask> it = tasks.iterator(); it.hasNext();) {
-				//GetRequestTask task = it.next();
+
 				IfcRequestTask task = it.next();
 				if(task.isDone()) {
 				    String p_request = task.getRequest();
 				    String p_response = task.getResponse();
-				    Matcher m = p.matcher(p_response);
+				    Matcher m = PATTERN_ECMWF.matcher(p_response);
 				    //System.out.println("Matcher ECMWF: " + m.group());
-				    //PUT YOUR CODE HERE
-				    //possibly aggregate request and response in Map<String,String>
-				    //or do something else with request and response
 				    sb.append("Request: " + p_request + " Decoder: " + task.getDecoder() + "\n");
 				    //sb.append("Response: " + p_response + "\n");
 				    if (m.find()) {
@@ -200,26 +244,15 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			    //avoid tight loop in "main" thread
 			    if(!tasks.isEmpty()) Thread.sleep(100);
 			    if (foundUrl) {
-				tasks.add(new GetRequestTask("ecCodes", url, this.executor));
+				tasks.add(new GetRequestTask(ECCODES, url, this.executor));
 				Thread.sleep(100);
 			    }
 			}
 			//now you have all responses for all async requests
 
-			//the following from your original code
-			//note: you should probably pass the responses from above
-			//to this next method (to keep your controller stateless)
-			//String results = doWorkwithMultipleDataReturned();
 			Result result = new Result(fileName, fileSize, md5ChkSum, 1);
 			result = processResponse(result, responseMap);
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			String json;
-			json = gson.toJson(result);
-			//request.setAttribute("bufr", json);
 			request.setAttribute("bufr", result);
-			//request.setAttribute("bufr", sb.toString()); 
-			//model.addAttribute(results, results);
-			//return "index";
 
 						
 						
@@ -232,52 +265,109 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    
 	    System.out.println("ex: 2 " + ex.getMessage());
 	    System.out.println("ex: 2 " + ex.getClass().getName());
-	    getServletContext().getRequestDispatcher("/error.jsp").forward(
+	    getServletContext().getRequestDispatcher("/error").forward(
 									   request, response);
 	    return;
 	}
-		
-		
 
-
-	getServletContext().getRequestDispatcher("/upload.jsp").forward(
+	getServletContext().getRequestDispatcher("/upload").forward(
 									request, response);
-
 
     }
 
 
     public Result processResponse (Result p_result, HashMap<String,String> p_mapResponse) {
 	Result result = p_result;
+	Gson gson = new Gson();
+	String errorMesg = null;
 	
-	String globusResponse = p_mapResponse.get("globus");
-	System.out.println("GlobusResponse: " + globusResponse);
-	if (globusResponse.contains("BUFR error")) {
-	    result.addDecoderResult("globus", false, "Error: xxx");
+	String globusResponse = p_mapResponse.get(GLOBUS);
+	
+	// DWD JSON Service - not yet published
+	/* 
+	ResponseJSON rdwd = gson.fromJson(globusResponse, ResponseJSON.class);
+	if(rdwd !=null) {
+	    result.setMessages(rdwd.getMessageCounter());
+	}
+	
+	if (rdwd != null && rdwd.hasErrors()) {
+	    List<ErrorJSON> errors = rdwd.getEncounteredErrorsInMessagesArray();
+	    StringBuffer sb = new StringBuffer();
+	    for (ErrorJSON e : errors) {
+		sb.append(e.getMessageID() + ": " + e.getErrorText());
+		sb.append("\n");
+	    }
+	    result.addDecoderResult(GLOBUS, false, sb.toString());
 	} else {
-	    result.addDecoderResult("globus", true, null);
+	    result.addDecoderResult(GLOBUS, true, null);
+	}
+	    
+	*/
+	//System.out.println("GlobusResponse: " + globusResponse);
+	
+	// Parsing DWD HTML for now
+	if (globusResponse.contains("BUFR error")) {
+	    result.addDecoderResult(GLOBUS, false, "Error: xxx");
+	} else {
+	    result.addDecoderResult(GLOBUS, true, null);
 	}
 
-	String ecCodesResponse = p_mapResponse.get("ecCodes");
 
-	if (ecCodesResponse.contains("Error")) {
-	    result.addDecoderResult("ecCodes", false, "Error: xxx");
+	String ecCodesResponse = p_mapResponse.get(ECCODES);
+
+	if (ecCodesResponse == null || ecCodesResponse.contains("Error")) {
+	    result.addDecoderResult(ECCODES, false, "Error");
 	    System.out.println("ecCodesResponse: " + ecCodesResponse);
 	} else {
-	    result.addDecoderResult("ecCodes", true, null);
+	    result.addDecoderResult(ECCODES, true, null);
 	}
 
-	String pybufrKitResponse = p_mapResponse.get("pybufrkit");
+	String pybufrKitResponse = p_mapResponse.get(PYBUFRKIT);
 
 	if (pybufrKitResponse.contains("\"status\": \"error\"")) {
-	    result.addDecoderResult("pybufrkit", false, "Error: xxx");
+
+	   ResponsePyBufrKit rpy = gson.fromJson(pybufrKitResponse, ResponsePyBufrKit.class);
+	   if(rpy != null) {
+	       errorMesg = rpy.getMessage();
+	   }
+	   
+	    result.addDecoderResult(PYBUFRKIT, false, errorMesg);
 	    System.out.println("pybufrkitResponse: " + pybufrKitResponse);
 	} else {
-	    result.addDecoderResult("pybufrkit", true, null);
+	    result.addDecoderResult(PYBUFRKIT, true, null);
 	}   
 	return result;
     }
 
+    class ResponsePyBufrKit {
+	public String status = null;
+	public String message = null;
+	
+	public ResponsePyBufrKit () {
+	    super();
+	}
+
+	public ResponsePyBufrKit (String status, String message) {
+	    this.status = status;
+	    this.message = message;
+	}
+	
+	public void setStatus(String  status) {
+	    this.status = status;
+	}
+	
+	public void setMessage(String message) {
+	    this.message = message;
+	}
+	
+	public String getStatus() {
+	    return this.status;
+	}
+	
+	public String getMessage() {
+	    return this.message;
+	}
+    }
     
     interface IfcRequestTask {
 	public String getRequest();
@@ -326,7 +416,15 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
             return this.url;
         }
         public String call() throws Exception {
-            return new DefaultHttpClient().execute(new HttpGet(getUrl()), new BasicResponseHandler());
+	    CloseableHttpClient httpclient;
+	    if (routePlanner != null) {
+		httpclient = HttpClients.custom()
+                .setRoutePlanner(routePlanner)
+                .build();
+	    } else {
+		httpclient = HttpClients.createDefault();
+	    }                                                                                                               
+	     return httpclient.execute(new HttpGet(getUrl()), new BasicResponseHandler());
         }
     }
 	
@@ -368,12 +466,6 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	private final String fieldName;
 	private File file;
 		
-	/*
-	  public PostRequestWork(String url) {
-	  this.url = url;
-	  }
-	*/
-		
 	public PostRequestWork(String url, String fileName, String fieldName, File file) {
             this.url = url;
 	    this.fileName = fileName;
@@ -398,44 +490,36 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	}
 		
         public String call() throws Exception {
-			
-	    CloseableHttpClient httpclient = HttpClients.createDefault();
+
+	    CloseableHttpClient httpclient;
+	    if (routePlanner != null) {
+		httpclient = HttpClients.custom()
+                .setRoutePlanner(routePlanner)
+                .build();
+	    } else {
+		httpclient = HttpClients.createDefault();
+	    }                                                                                                               
+
 	    String returnValue = "";
 	    try {
 		HttpPost httppost = new HttpPost(getUrl());
 
-		/*		
-				File tempFile = File.createTempFile("prefix-", "-suffix");
-				//tempFile.deleteOnExit();
-				FileOutputStream out = new FileOutputStream(tempFile);
-				IOUtils.copy(getInputStream(), out);
-				out.flush();
-		*/
 		FileBody bin = new FileBody(getFile());
-		//FileBody bin = new FileBody(new File("c:\\Users\\mheene\\Documents\\project\\bufrdashboard\\test\\2bufr.bin"));
-		// filebox
 		HttpEntity reqEntity = MultipartEntityBuilder.create()
                     .addPart(getFieldName(), bin)          
                     .build();
-		//FileBody bin = new FileBody(new File(args[0]));
-		//StringBody comment = new StringBody("A binary file of some kind", ContentType.TEXT_PLAIN);
-		/*
-		  HttpEntity reqEntity = MultipartEntityBuilder.create()
-		  .addBinaryBody("filebox", getInputStream())          
-		  .build();
-		*/
 		httppost.setEntity(reqEntity);
 
 		System.out.println("executing request " + httppost.getRequestLine());
 		CloseableHttpResponse response = httpclient.execute(httppost);
 		try {
-		    System.out.println("----------------------------------------");
-		    System.out.println(response.getStatusLine());
+		    //System.out.println("----------------------------------------");
+		    //System.out.println(response.getStatusLine());
 		    HttpEntity resEntity = response.getEntity();
 		    if (resEntity != null) {
-			System.out.println("Response content length: " + resEntity.getContentLength());
+			//System.out.println("Response content length: " + resEntity.getContentLength());
 			String responseString = EntityUtils.toString(resEntity, "UTF-8");
-			System.out.println(responseString);
+			//System.out.println(responseString);
 			returnValue = responseString;
 					
 		    }
@@ -447,22 +531,6 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 		httpclient.close();
 	    }
 	    return returnValue;
-	    /*	
-		HttpClient client = new DefaultHttpClient();
-		HttpPost post = new HttpPost(this.getUrl());
-		//String textFileName = null;
-		//File file = new File(textFileName);
-		InputStream ios = getInputStream();
-		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-		builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-		builder.addBinaryBody("filebox", ios, ContentType.MULTIPART_FORM_DATA, getFileName());
-			
-		// 
-		HttpEntity entity = builder.build();
-		post.setEntity(entity);
-		HttpResponse response = client.execute(post);	
-		return response.toString();
-	    */	
         }
     }
 }

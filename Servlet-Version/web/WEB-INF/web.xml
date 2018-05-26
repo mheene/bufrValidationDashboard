@@ -16,12 +16,43 @@
             <param-name>storeFiles</param-name>
             <param-value>false</param-value>
       </init-param>
+      <!--
+      <init-param>
+            <param-name>proxyHost</param-name>
+            <param-value>my.proxy.server</param-value>
+      </init-param>
+      <init-param>
+            <param-name>proxyPort</param-name>
+            <param-value>proxy.port</param-value>
+      </init-param>
+-->
+
   </servlet>
    
   <servlet-mapping>
     <servlet-name> BufrValidatorDashboardServlet</servlet-name>
     <url-pattern>/uploadFile</url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>upload</servlet-name>
+    <jsp-file>/WEB-INF/jsp/upload.jsp</jsp-file>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>upload</servlet-name>
+    <url-pattern>/upload</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>error</servlet-name>
+    <jsp-file>/WEB-INF/jsp/error.jsp</jsp-file>
+      <init-param>
+            <param-name>debug</param-name>
+            <param-value>false</param-value>
+      </init-param>
+  </servlet>
+
 
   <filter>
         <filter-name>Request Dumper Filter</filter-name>
@@ -34,16 +65,16 @@
   </filter-mapping>
 
   <welcome-file-list>
-    <welcome-file>upload.jsp</welcome-file>
+    <welcome-file>upload</welcome-file>
   </welcome-file-list>
 
   <error-page>
     <exception-type>java.lang.Throwable</exception-type>
-    <location>/error.jsp</location>
+    <location>/error</location>
   </error-page>
 
   <error-page>
-    <location>/error.jsp</location>
+    <location>/error</location>
   </error-page>
 
 
