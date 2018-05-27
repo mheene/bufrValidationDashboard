@@ -66,6 +66,7 @@ public class Result {
 
     public List<DecoderResult> getDecoderResults() {
         return this.decoderResults;
+
     }
 
     public void addDecoderResult(String decoder, boolean status, String error) {
