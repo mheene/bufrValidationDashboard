@@ -19,6 +19,7 @@
                 <h:outputText value="Messages: #{result.messages}"/>
             </h:panelGrid>
 
+
             <h:panelGrid id="result" rendered="#{not empty result.decoderResults}" columns="3" cellpadding="5">
                 <h:outputText value="#{result.decoderResults.get(0).decoder}"/>
                 <p:selectBooleanButton id="value1" value="#{result.decoderResults.get(0).status}" onLabel="True" offLabel="False" onIcon="ui-icon-check" offIcon="ui-icon-close" style="width:60px" />
