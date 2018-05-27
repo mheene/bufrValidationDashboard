@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+    <h:head>
+        <style>
+
+            *{
+                font-family: tahoma;
+                font-size: 11px;
+                direction: ltr;
+            }
+            .font{
+
+                font-size:7px;
+                direction: ltr;
+            }
+
+
+            .backColor{
+                background-color:#CEDDE2;
+            }
+            .c1{
+                width: 20%;
+                align: left;
+                text-align: left;
+            }
+            .c2{
+
+                width: 80%;
+            }
+            .c50{
+                width: 50px;
+            }
+            .cP{
+                width: 45%;
+            }
+            .c15P{
+                width: 15%;
+            }
+        </style>
+        <!--<meta http-equiv="refresh" content="300"/>-->
+    </h:head>
+
+    <body>
+        <p:layout fullPage="true">
+            <p:layoutUnit position="north" size="150">
+                <div style="width: 100%; height: 140px;text-align: center;background-color: #EAF5F7">
+                    <p:graphicImage url="images/header.png" style="width: 100%; height: 140px;text-align: center"  />
+                </div>
+            </p:layoutUnit>
+
+            <p:layoutUnit position="center" style="direction: rtl">
+                <ui:insert name="center"/>
+            </p:layoutUnit>
+
+            <p:layoutUnit  position="south" size="30" >
+                <h:panelGroup style="background-color:#C0D2DA;height: 98%; text-align: center" layout="block" styleClass="backColor">
+                    <h:outputLabel style="font-size:  9px;">Copy right © 2013 . All right reserved by WMO </h:outputLabel>
+                </h:panelGroup>
+            </p:layoutUnit>
+
+        </p:layout>
+
+    </body>
+</html>
