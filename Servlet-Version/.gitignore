@@ -3,6 +3,9 @@
 # Compiled class file
 *.class
 
+# Editor backup files
+*.*~
+
 # Log file
 *.log
 *.iml
@@ -13,7 +16,7 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
+#*.jar
 *.war
 *.nar
 *.ear
