@@ -174,7 +174,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    }
 	}
 
- 
+	File tempFile = null;
 	try {
             // parses the request's content to extract file data
             //@SuppressWarnings("unchecked")
@@ -198,7 +198,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			//process bufr
 			InputStream is = item.getInputStream();
 						
-			File tempFile = File.createTempFile("prefix-", "-suffix");
+			tempFile = File.createTempFile("prefix-", "-suffix");
 			tempFile.deleteOnExit();
 			FileOutputStream out = new FileOutputStream(tempFile);
 			IOUtils.copy(is, out);
@@ -212,9 +212,9 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 			List<IfcRequestTask> tasks = new ArrayList<IfcRequestTask>();
 			//List<IfcRequestTask> tasks = new CopyOnWriteArrayList<IfcRequestTask>();
-			tasks.add(new PostRequestTask(ECCODES, ECCODES_URL, fileName, "filebox", tempFile, this.executor));
-			tasks.add(new PostRequestTask(GLOBUS, DWD_URL, fileName, "uploadFile",tempFile, this.executor));
-			tasks.add(new PostRequestTask(PYBUFRKIT, PYBUFRKIT_URL, fileName, "file",tempFile, this.executor));
+			tasks.add(new PostRequestTask(ECCODES, ECCODES_URL, fileName, "filebox", tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(GLOBUS, DWD_URL, fileName, "uploadFile",tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(PYBUFRKIT, PYBUFRKIT_URL, fileName, "file",tempFile, this.executor, routePlanner));
 			//now wait for all async tasks to complete
 			while(!tasks.isEmpty()) {
 
@@ -244,7 +244,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			    //avoid tight loop in "main" thread
 			    if(!tasks.isEmpty()) Thread.sleep(100);
 			    if (foundUrl) {
-				tasks.add(new GetRequestTask(ECCODES, url, this.executor));
+				tasks.add(new GetRequestTask(ECCODES, url, routePlanner, this.executor));
 				Thread.sleep(100);
 			    }
 			}
@@ -253,7 +253,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			Result result = new Result(fileName, fileSize, md5ChkSum, 1);
 			result = processResponse(result, responseMap);
 			request.setAttribute("bufr", result);
-
+			boolean tempFileDeleted =tempFile.delete();
+			System.out.println("Deleted tempFile: " + tempFileDeleted);
 						
 						
 		    }
@@ -265,6 +266,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    
 	    System.out.println("ex: 2 " + ex.getMessage());
 	    System.out.println("ex: 2 " + ex.getClass().getName());
+	    //boolean tempFileDeleted = tempFile.delete();
+	    //System.out.println("Deleted tempFile: " + tempFileDeleted);
 	    getServletContext().getRequestDispatcher("/error").forward(
 									   request, response);
 	    return;
@@ -339,198 +342,11 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	return result;
     }
 
-    class ResponsePyBufrKit {
-	public String status = null;
-	public String message = null;
-	
-	public ResponsePyBufrKit () {
-	    super();
-	}
 
-	public ResponsePyBufrKit (String status, String message) {
-	    this.status = status;
-	    this.message = message;
-	}
 	
-	public void setStatus(String  status) {
-	    this.status = status;
-	}
-	
-	public void setMessage(String message) {
-	    this.message = message;
-	}
-	
-	public String getStatus() {
-	    return this.status;
-	}
-	
-	public String getMessage() {
-	    return this.message;
-	}
-    }
-    
-    interface IfcRequestTask {
-	public String getRequest();
-	public boolean isDone();
-	public String getResponse();
-	public String getDecoder();
-    }
-	
-    class GetRequestTask implements IfcRequestTask {
-        private GetRequestWork work;
-        private FutureTask<String> task;
-	private String decoder;
-        public GetRequestTask( String decoder, String url, Executor executor) {
-	    this.decoder = decoder;
-            this.work = new GetRequestWork(url);
-            this.task = new FutureTask<String>(work);
-            executor.execute(this.task);
-        }
-        public String getRequest() {
-            return this.work.getUrl();
-        }
-        public boolean isDone() {
-            return this.task.isDone();
-        }
-
-	public String getDecoder() {
-	    return this.decoder;
-	}
-	
-        public String getResponse() {
-            try {
-                return this.task.get();
-            } catch(Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 
     //Callable representing actual HTTP GET request
-    class GetRequestWork implements Callable<String> {
-        private final String url;
-        public GetRequestWork(String url) {
-            this.url = url;
-        }
-        public String getUrl() {
-            return this.url;
-        }
-        public String call() throws Exception {
-	    CloseableHttpClient httpclient;
-	    if (routePlanner != null) {
-		httpclient = HttpClients.custom()
-                .setRoutePlanner(routePlanner)
-                .build();
-	    } else {
-		httpclient = HttpClients.createDefault();
-	    }                                                                                                               
-	     return httpclient.execute(new HttpGet(getUrl()), new BasicResponseHandler());
-        }
-    }
-	
-    class PostRequestTask implements IfcRequestTask{
-        private PostRequestWork work;
-        private FutureTask<String> task;
-	private String decoder;
-	
-        public PostRequestTask(String decoder, String url, String p_fileName, String p_fieldName, File p_file, Executor executor) {
-            this.work = new PostRequestWork(url, p_fileName, p_fieldName, p_file);
-            this.task = new FutureTask<String>(work);
-	    this.decoder = decoder;
-	    executor.execute(this.task);
-        }
-
-	public String getDecoder() {
-	    return this.decoder;
-	}
-	
-        public String getRequest() {
-            return this.work.getUrl();
-        }
-        public boolean isDone() {
-            return this.task.isDone();
-        }
-        public String getResponse() {
-            try {
-                return this.task.get();
-            } catch(Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 	
     //Callable representing actual HTTP POST request
-    class PostRequestWork implements Callable<String> {
-        private final String url;
-	private final String fileName;
-	private final String fieldName;
-	private File file;
-		
-	public PostRequestWork(String url, String fileName, String fieldName, File file) {
-            this.url = url;
-	    this.fileName = fileName;
-	    this.fieldName = fieldName;
-	    this.file = file;
-        }
-		
-        public String getUrl() {
-            return this.url;
-        }
-		
-	public String getFileName() {
-	    return this.fileName;
-	}
-		
-	public String getFieldName() {
-	    return this.fieldName;
-	}
-		
-	public File getFile() {
-	    return this.file;
-	}
-		
-        public String call() throws Exception {
 
-	    CloseableHttpClient httpclient;
-	    if (routePlanner != null) {
-		httpclient = HttpClients.custom()
-                .setRoutePlanner(routePlanner)
-                .build();
-	    } else {
-		httpclient = HttpClients.createDefault();
-	    }                                                                                                               
-
-	    String returnValue = "";
-	    try {
-		HttpPost httppost = new HttpPost(getUrl());
-
-		FileBody bin = new FileBody(getFile());
-		HttpEntity reqEntity = MultipartEntityBuilder.create()
-                    .addPart(getFieldName(), bin)          
-                    .build();
-		httppost.setEntity(reqEntity);
-
-		System.out.println("executing request " + httppost.getRequestLine());
-		CloseableHttpResponse response = httpclient.execute(httppost);
-		try {
-		    //System.out.println("----------------------------------------");
-		    //System.out.println(response.getStatusLine());
-		    HttpEntity resEntity = response.getEntity();
-		    if (resEntity != null) {
-			//System.out.println("Response content length: " + resEntity.getContentLength());
-			String responseString = EntityUtils.toString(resEntity, "UTF-8");
-			//System.out.println(responseString);
-			returnValue = responseString;
-					
-		    }
-		    EntityUtils.consume(resEntity);
-		} finally {
-		    response.close();
-		}
-	    } finally {
-		httpclient.close();
-	    }
-	    return returnValue;
-        }
-    }
 }
