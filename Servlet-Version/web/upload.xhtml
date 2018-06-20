@@ -1,36 +1,43 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="http://java.sun.com/jsf/facelets"
                 xmlns:h="http://java.sun.com/jsf/html"
-                xmlns:f="http://java.sun.com/jsf/core"
                 xmlns:p="http://primefaces.org/ui"
                 template="template.xhtml">
 
     <ui:define name="center">
         <h:form enctype="multipart/form-data">
-            <p:fileUpload fileUploadListener="#{result.handleFileUpload}" mode="advanced" auto="true"
-                          dragDropSupport="false"
-                          multiple="false" update="messages,display,result" label="Select File"
+            <p:fileUpload fileUploadListener="#{bufrValidatorDashboardBean.handleFileUpload}" mode="advanced" auto="true"
+                          dragDropSupport="false" sizeLimit="10485760"
+                          multiple="false" update="messages,display,tblResult" label="Select File"
                           invalidSizeMessage="File size is wrong">
             </p:fileUpload>
+
             <h:panelGrid id="display" columns="1" style="margin: 10px;">
-                <h:outputText id="fileName" value="FileName: #{result.fileName}"/>
-                <h:outputText value="File Size: #{result.fileSize}"/>
-                <h:outputText value="MD5 ChkSum: #{result.md5CheckSum}"/>
-                <h:outputText value="Messages: #{result.messages}"/>
+                <h:outputText id="fileName" value="FileName: #{bufrValidatorDashboardBean.fileName}"/>
+                <h:outputText value="File Size: #{bufrValidatorDashboardBean.fileSize}"/>
+                <h:outputText value="MD5 ChkSum: #{bufrValidatorDashboardBean.md5CheckSum}"/>
+                <!--<h:outputText value="Messages: #{bufrValidatorDashboardBean.messages}"/>-->
             </h:panelGrid>
 
-
-            <h:panelGrid id="result" rendered="#{not empty result.decoderResults}" columns="3" cellpadding="5">
-                <h:outputText value="#{result.decoderResults.get(0).decoder}"/>
-                <p:selectBooleanButton id="value1" value="#{result.decoderResults.get(0).status}" onLabel="True" offLabel="False" onIcon="ui-icon-check" offIcon="ui-icon-close" style="width:60px" />
-                <h:outputText value="#{result.decoderResults.get(0).error}"/>
-                <h:outputText value="#{result.decoderResults.get(1).decoder}"/>
-                <p:selectBooleanButton id="value2" value="#{result.decoderResults.get(1).status}" onLabel="True" offLabel="False" onIcon="ui-icon-check" offIcon="ui-icon-close" style="width:60px" />
-                <h:outputText value="#{result.decoderResults.get(1).error}"/>
-                <h:outputText value="#{result.decoderResults.get(2).decoder}"/>
-                <p:selectBooleanButton id="value3" value="#{result.decoderResults.get(2).status}" onLabel="True" offLabel="False" onIcon="ui-icon-check" offIcon="ui-icon-close" style="width:60px" />
-                <h:outputText value="#{result.decoderResults.get(2).error}"/>
-            </h:panelGrid>
+            <p:dataTable id="tblResult" var="bufrDecoder" value="#{bufrValidatorDashboardBean.bufrDecoderList}"
+                         rowStyleClass="#{bufrDecoder.status eq 2 ? 'Error' : null}">
+                <p:column headerText="Decoder">
+                    <h:outputText value="#{bufrDecoder.decoder}"/>
+                </p:column>
+                <p:column headerText="Status">
+                    <p:triStateCheckbox value="#{bufrDecoder.status}"/>
+                </p:column>
+                <p:column headerText="Error Description">
+                    <h:outputText value="#{bufrDecoder.description}"/>
+                </p:column>
+            </p:dataTable>
+            <style type="text/css">
+                .Error {
+                    background-color: darkorange;
+                    background-image: none;
+                    color: black;
+                }
+            </style>
             <p:growl id="messages" showDetail="true"/>
         </h:form>
     </ui:define>

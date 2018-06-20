@@ -14,6 +14,37 @@ import java.util.HashMap;
 @ManagedBean(name = "result")
 @SessionScoped
 public class Result {
+    private List<BufrDecoder> bufrDecoder = new ArrayList<>();
+
+    public List<BufrDecoder> getBufrDecoder() {
+        BufrDecoder bufrDecoder1 = new BufrDecoder();
+        bufrDecoder1 = new BufrDecoder();
+        bufrDecoder1.setDecoder("BUFR Tools (DWD)");
+        bufrDecoder1.setStatus(1);
+        bufrDecoder1.setDescription("No error detected");
+        bufrDecoder.add(bufrDecoder1);
+        bufrDecoder1 = new BufrDecoder();
+        bufrDecoder1.setDecoder("ecCodes (ECMWF)");
+        bufrDecoder1.setStatus(2);
+        bufrDecoder1.setDescription("Some error detected");
+        bufrDecoder.add(bufrDecoder1);
+        bufrDecoder1 = new BufrDecoder();
+        bufrDecoder1.setDecoder("PyBufrKit");
+        bufrDecoder1.setStatus(1);
+        bufrDecoder1.setDescription("No error detected");
+        bufrDecoder1 = new BufrDecoder();
+        bufrDecoder1.setDecoder("validator1");
+        bufrDecoder1.setStatus(1);
+        bufrDecoder1.setDescription("No error detected");
+        bufrDecoder.add(bufrDecoder1);
+        bufrDecoder1 = new BufrDecoder();
+        bufrDecoder1.setDecoder("validator2");
+        bufrDecoder1.setStatus(1);
+        bufrDecoder1.setDescription("No error detected");
+        bufrDecoder.add(bufrDecoder1);
+        bufrDecoder.add(bufrDecoder1);
+        return bufrDecoder;
+    }
 
     public Result() {
     }
@@ -95,7 +126,7 @@ public class Result {
             out = new FileOutputStream(tempFile);
             IOUtils.copy(fis, out);
             out.flush();
-        }catch (Exception ex){
+        } catch (Exception ex) {
             System.out.println("ex: 2 " + ex.getMessage());
             System.out.println("ex: 2 " + ex.getClass().getName());
         }
@@ -107,7 +138,7 @@ public class Result {
         public boolean status;
         public String error = null;
 
-        public HashMap<String, String> DECODER_MAP = BufrValidatorDashboardServlet.DECODER_MAP;
+        public HashMap<String, String> DECODER_MAP = BufrValidatorDashboardBean.DECODER_MAP;
 
         public DecoderResult(String decoder, boolean status, String error) {
             this.decoder = decoder;
