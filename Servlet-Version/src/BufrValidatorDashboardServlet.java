@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
-
+import java.util.Scanner;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -19,6 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.MatchResult;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
@@ -76,9 +77,9 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     private static final int MAX_FILE_SIZE      = 1024 * 1024 * 10; // 10 MB
     private static final int MAX_REQUEST_SIZE   = 1024 * 1024 * 20; // 20 MB
     public static final String ECCODES_URL = "http://apps.ecmwf.int/codes/bufr/validator/";
-    public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/uploadFile";
+    //public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/uploadFile";
     // DWD JSON Service - not yet released
-    //public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/validatorFile";
+    public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/validatorFile";
     public static final String PYBUFRKIT_URL = "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile";
     public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
 
@@ -203,7 +204,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			FileOutputStream out = new FileOutputStream(tempFile);
 			IOUtils.copy(is, out);
 			out.flush();
-				
+
 			md5ChkSum = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
 			StringBuffer sb = new StringBuffer();
 			HashMap <String, String> responseMap = new HashMap<String, String>();
@@ -287,7 +288,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	String globusResponse = p_mapResponse.get(GLOBUS);
 	
 	// DWD JSON Service - not yet published
-	/* 
+
 	ResponseJSON rdwd = gson.fromJson(globusResponse, ResponseJSON.class);
 	if(rdwd !=null) {
 	    result.setMessages(rdwd.getMessageCounter());
@@ -305,16 +306,17 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    result.addDecoderResult(GLOBUS, true, null);
 	}
 	    
-	*/
-	//System.out.println("GlobusResponse: " + globusResponse);
+
+	System.out.println("GlobusResponse: " + globusResponse);
 	
 	// Parsing DWD HTML for now
+	/*
 	if (globusResponse.contains("BUFR error")) {
 	    result.addDecoderResult(GLOBUS, false, "Error: xxx");
 	} else {
 	    result.addDecoderResult(GLOBUS, true, null);
 	}
-
+	*/
 
 	String ecCodesResponse = p_mapResponse.get(ECCODES);
 
