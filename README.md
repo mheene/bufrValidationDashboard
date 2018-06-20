@@ -26,4 +26,6 @@ Please note that this is an inital commit for discussion purposes only. Some val
 
 [WMO Paper IPET-CM II](https://www.wmo.int/pages/prog/www/ISS/Meetings/IPET-CM_Offenbach2018/Documents/IPET-CM-II_Doc7-3-1_BUFR-Validation-Dashboard.docx)
 
-[Online Demonstrator](http://bufr-wildfly01.193b.starter-ca-central-1.openshiftapps.com/dashboard)
+[Online Demonstrator, openshift cloud](http://bufr-wildfly01.193b.starter-ca-central-1.openshiftapps.com/dashboard)
+
+[Online Demonstrator based on primefaces, IRIMO](http://forecast.irimo.ir/BufrValidation/)
