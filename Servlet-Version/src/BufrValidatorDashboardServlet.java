@@ -81,12 +81,14 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     // DWD JSON Service - not yet released
     public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/validatorFile";
     public static final String PYBUFRKIT_URL = "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile";
+    public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/json";
+    
     public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
 
     public static final String GLOBUS = "BUFR Tools (DWD)";
     public static final String ECCODES = "ecCodes (ECMWF)";
     public static final String PYBUFRKIT = "PyBufrKit";
-
+    public static final String TROLLBUFR = "TrollBUFR";
 
     public static final HashMap<String, String> DECODER_MAP;
     
@@ -96,6 +98,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	DECODER_MAP.put(GLOBUS, "https://kunden.dwd.de/bufrviewer");
 	DECODER_MAP.put(ECCODES, ECCODES_URL);
 	DECODER_MAP.put(PYBUFRKIT,  "http://aws-bufr-webapp.s3-website-ap-southeast-2.amazonaws.com");
+	DECODER_MAP.put(TROLLBUFR, "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com");
     }
 
     private Executor executor;	
@@ -216,6 +219,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			tasks.add(new PostRequestTask(ECCODES, ECCODES_URL, fileName, "filebox", tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(GLOBUS, DWD_URL, fileName, "uploadFile",tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(PYBUFRKIT, PYBUFRKIT_URL, fileName, "file",tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(TROLLBUFR, TROLLBUFR_URL, fileName, "the_file", tempFile, this.executor, routePlanner));
 			//now wait for all async tasks to complete
 			while(!tasks.isEmpty()) {
 
@@ -340,7 +344,11 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    System.out.println("pybufrkitResponse: " + pybufrKitResponse);
 	} else {
 	    result.addDecoderResult(PYBUFRKIT, true, null);
-	}   
+	}
+
+	String trollBufrResponse = p_mapResponse.get(TROLLBUFR);
+	System.out.println("trollBUFR: " + trollBufrResponse);
+	
 	return result;
     }
 
