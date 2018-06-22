@@ -13,6 +13,7 @@ import java.util.Scanner;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -60,6 +61,10 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * A Java servlet that handles file upload from client.
@@ -81,7 +86,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     // DWD JSON Service - not yet released
     public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/validatorFile";
     public static final String PYBUFRKIT_URL = "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile";
-    public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/json";
+    public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/status";
+    //    public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/json";
     
     public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
 
@@ -101,8 +107,15 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	DECODER_MAP.put(TROLLBUFR, "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com");
     }
 
-    private Executor executor;	
+    //private Executor executor;
+    private final ExecutorService executor = Executors.newFixedThreadPool(20);	
     private DefaultProxyRoutePlanner routePlanner = null;
+
+    public void destroy() {
+	super.destroy();
+	System.out.println("Destroy: call");
+	executor.shutdown();
+    }
 
     public void init(ServletConfig config) throws ServletException {
 	super.init(config);
@@ -211,7 +224,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			md5ChkSum = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
 			StringBuffer sb = new StringBuffer();
 			HashMap <String, String> responseMap = new HashMap<String, String>();
-			executor = Executors.newFixedThreadPool(4);
+			//executor = Executors.newFixedThreadPool(4);
 						
 
 			List<IfcRequestTask> tasks = new ArrayList<IfcRequestTask>();
@@ -348,6 +361,42 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 	String trollBufrResponse = p_mapResponse.get(TROLLBUFR);
 	System.out.println("trollBUFR: " + trollBufrResponse);
+	/*
+	ResponseTrollBufr rtrollBufr = gson.fromJson(trollBufrResponse, ResponseTrollBufr.class);
+	if (rtrollBufr != null) {
+	    System.out.println("error: " + rtrollBufr.getStatus() + " Msg: " + rtrollBufr.getMessage());
+	}
+	*/
+	
+	JsonParser parser = new JsonParser();
+	JsonArray array = parser.parse(trollBufrResponse).getAsJsonArray();
+	boolean statusTroll = true;
+	StringBuffer sbTroll = new StringBuffer(); 
+	for (int i=0; i < array.size(); i++) {
+	    JsonElement je = array.get(i);
+	    System.out.println("JsonElement: " + je);
+	    ResponseTrollBufr rtrollBufr = gson.fromJson(je, ResponseTrollBufr.class);
+	    System.out.println("error: " + rtrollBufr.hasError() + " Msg: " + rtrollBufr.getError());
+	    if (rtrollBufr.hasError()) {
+		System.out.println("statusTroll");
+		statusTroll = false;
+		sbTroll.append(rtrollBufr.getError());
+	    }
+	}
+	    /*
+	    String status = ((JsonObject)je).getAsJsonObject("status").getAsString();
+	    System.out.println("status: " + status);
+	    String error = ((JsonObject)je).getAsJsonObject("error").getAsString();
+	    System.out.println("error: " + error);
+	    */
+
+	result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString());
+	/*
+	ResponseTrollBufr rtrollBufr = gson.fromJson(trollBufrResponse, ResponseTrollBufr.class);
+	if (rtrollBufr != null) {
+	    System.out.println("error: " + rtrollBufr.getStatus() + " Msg: " + rtrollBufr.getMessage());
+	}
+	*/
 	
 	return result;
     }

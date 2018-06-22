@@ -1,6 +1,7 @@
 import java.io.File;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
@@ -12,7 +13,7 @@ public class PostRequestTask implements IfcRequestTask{
     private FutureTask<String> task;
     private String decoder;
 	
-    public PostRequestTask(String decoder, String url, String p_fileName, String p_fieldName, File p_file, Executor executor, DefaultProxyRoutePlanner routePlanner) {
+    public PostRequestTask(String decoder, String url, String p_fileName, String p_fieldName, File p_file, ExecutorService executor, DefaultProxyRoutePlanner routePlanner) {
 	this.work = new PostRequestWork(url, p_fileName, p_fieldName, p_file, routePlanner);
 	this.task = new FutureTask<String>(work);
 	this.decoder = decoder;

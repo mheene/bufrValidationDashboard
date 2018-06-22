@@ -1,4 +1,5 @@
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
@@ -10,7 +11,7 @@ public class GetRequestTask implements IfcRequestTask {
     private FutureTask<String> task;
     private String decoder;
     
-    public GetRequestTask( String decoder, String url, DefaultProxyRoutePlanner routePlanner, Executor executor) {
+    public GetRequestTask( String decoder, String url, DefaultProxyRoutePlanner routePlanner, ExecutorService executor) {
 	this.decoder = decoder;
 	this.work = new GetRequestWork(url, routePlanner);
 	this.task = new FutureTask<String>(work);
