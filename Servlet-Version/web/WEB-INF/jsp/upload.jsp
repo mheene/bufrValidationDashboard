@@ -90,8 +90,6 @@
                 <a href="mailto:markus.heene@gmail.com">Contact me</a>
             </div>
         </div>
-
-
     </footer>
 
     
