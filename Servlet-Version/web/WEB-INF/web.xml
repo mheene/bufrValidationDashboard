@@ -4,13 +4,13 @@
 	 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
 			     http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
 	 version="3.0">
-  <display-name>BufrViewerServlet</display-name>
+  <display-name>BufrValidatorDashboard</display-name>
 
 
   <servlet>
-    <display-name> BufrValidatorDashboardServlet</display-name>
-    <servlet-name> BufrValidatorDashboardServlet</servlet-name>
-    <servlet-class> BufrValidatorDashboardServlet</servlet-class>
+    <display-name>BufrValidatorDashboardServlet</display-name>
+    <servlet-name>BufrValidatorDashboardServlet</servlet-name>
+    <servlet-class>BufrValidatorDashboardServlet</servlet-class>
     <load-on-startup>0</load-on-startup>
       <init-param>
             <param-name>storeFiles</param-name>
@@ -30,7 +30,7 @@
   </servlet>
    
   <servlet-mapping>
-    <servlet-name> BufrValidatorDashboardServlet</servlet-name>
+    <servlet-name>BufrValidatorDashboardServlet</servlet-name>
     <url-pattern>/uploadFile</url-pattern>
   </servlet-mapping>
 
