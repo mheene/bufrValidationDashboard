@@ -3,7 +3,11 @@ language: java
 jdk:
   - oraclejdk8
   - oraclejdk9
-  - openjdk8
   - oraclejdk10
+  - openjdk8
+  - openjdk9	
+  - openjdk10
+  - openjdk11
+  - oraclejdk-ea
 
 script: ant -f Servlet-Version/build.xml dist
