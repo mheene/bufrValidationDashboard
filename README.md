@@ -17,7 +17,7 @@ You will find the distribution in the directory dist. If you run tomcat and chan
 
 ant deploy
 
-will deploy the application .
+will deploy the application.
 
 
 Notes:
