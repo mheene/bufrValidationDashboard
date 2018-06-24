@@ -9,3 +9,6 @@ logdir.local=${catalina.home}/logs
 oc.username=<your_openshift_username>
 oc.password=<your_openshift_password>
 oc.appname=<your_openshift_app>
+demo.username=<your_openshift_username>
+demo.password=<your_openshift_password>
+demo.appname=<your_openshift_app>

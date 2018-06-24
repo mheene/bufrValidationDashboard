@@ -79,6 +79,18 @@
 </target>
 
 
+<!-- ==================== Deploy Openshift Demonstrator ================================== -->
+<target name="deploy-demo" depends="dist" description="Openshift Demonstrator Deployment">
+   <exec executable="/bin/bash">
+    <arg value="${tools.dir}/deploy-oc.sh"/>
+    <arg value="${demo.username}"/>
+    <arg value="${demo.password}"/>
+    <arg value="${demo.appname}"/>
+    <arg value="${dist.home}/${app.name}.war"/>
+  </exec>
+</target>
+
+
 <!-- ==================== Prepare  ================================== -->
 
   <target name="prepare">
