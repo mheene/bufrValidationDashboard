@@ -73,6 +73,7 @@ public class PostRequestWork implements Callable<String> {
 
 	String returnValue = "";
 	long startTime = System.currentTimeMillis();
+	
 	try {
 
 	    HttpPost httppost = new HttpPost(getUrl());
@@ -100,6 +101,8 @@ public class PostRequestWork implements Callable<String> {
 	    } finally {
 		    response.close();
 	    }
+	} catch (IOException ioe) {
+	    System.out.println("IOE: " + ioe);
 	} finally {
 	    httpclient.close();
 	}

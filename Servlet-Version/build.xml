@@ -32,6 +32,7 @@
     <javac includeantruntime="false" srcdir="${src.home}" destdir="${build.home}/WEB-INF/classes" classpathref="classpath">
       <compilerarg value="-Xdiags:verbose"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Xlint:-path"/>
     </javac>
     <!-- Copy application resources -->
     <copy  todir="${build.home}/WEB-INF/classes">
