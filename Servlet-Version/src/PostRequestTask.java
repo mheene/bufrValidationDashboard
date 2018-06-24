@@ -32,6 +32,10 @@ public class PostRequestTask implements IfcRequestTask{
 	return this.task.isDone();
     }
 
+    public long getResponseTime() {
+	return this.work.getResponseTime();
+    }
+
     public String getResponse() {
 	try {
 	    return this.task.get();

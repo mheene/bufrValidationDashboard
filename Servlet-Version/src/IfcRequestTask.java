@@ -4,4 +4,5 @@ public interface IfcRequestTask {
     public boolean isDone();
     public String getResponse();
     public String getDecoder();
+    public long getResponseTime();
 }

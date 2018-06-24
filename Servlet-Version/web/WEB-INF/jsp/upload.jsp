@@ -42,11 +42,13 @@
 		      <c:out value="File Size: ${bufr.fileSize}"/><br>
 		      <c:out value="MD5 ChkSum: ${bufr.md5CheckSum}"/><br>
 		      <c:out value="Messages: ${bufr.messages}"/><br>
+		      <c:out value="Total Response Time: ${bufr.overallResponseTime}"/><br>
 		      <p>
 		      <table class="table table-bordered table-striped">
 		      <thead>
 			<tr>
 				<th scope="col">Decoder</th>
+				<th scope="col">Response Time (ms)</th>
 		      		<th scope="col">Status</th>
 		      		<th scope="col">Error Text</th>
 			</tr>
@@ -56,6 +58,9 @@
 		      	<tr>
 			<th scope="row"> 			   
 			    <a href="${decoderResult.url}" target="_blank"><c:out value="${decoderResult.decoder}"/></a>
+			</th>
+			<th scope="row">
+			   <c:out value="${decoderResult.responseTime}"/>
 			</th>
 			<th scope="row">
 			   <c:out value="${decoderResult.status}"/>

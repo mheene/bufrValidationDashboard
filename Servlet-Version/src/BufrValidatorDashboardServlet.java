@@ -192,6 +192,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	}
 
 	File tempFile = null;
+	long startOverallResponseTime = System.currentTimeMillis();
 	try {
             // parses the request's content to extract file data
             //@SuppressWarnings("unchecked")
@@ -223,7 +224,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 			md5ChkSum = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
 			StringBuffer sb = new StringBuffer();
-			HashMap <String, String> responseMap = new HashMap<String, String>();
+			HashMap <String, DecoderResponse> responseMap = new HashMap<String, DecoderResponse>();
 			//executor = Executors.newFixedThreadPool(4);
 						
 
@@ -238,12 +239,14 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 			    String url = null;
 			    boolean foundUrl = false;
+			    long ecmwfPostRequestTime = 0;
 			    for(Iterator<IfcRequestTask> it = tasks.iterator(); it.hasNext();) {
 
 				IfcRequestTask task = it.next();
 				if(task.isDone()) {
 				    String p_request = task.getRequest();
 				    String p_response = task.getResponse();
+				    long p_responseTime = task.getResponseTime();
 				    Matcher m = PATTERN_ECMWF.matcher(p_response);
 				    //System.out.println("Matcher ECMWF: " + m.group());
 				    sb.append("Request: " + p_request + " Decoder: " + task.getDecoder() + "\n");
@@ -251,10 +254,13 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 				    if (m.find()) {
 					url = m.group();
 					foundUrl = true;
+					ecmwfPostRequestTime = p_responseTime;
+					System.out.println("ECMWF Post: " + ecmwfPostRequestTime);
 					//sb.append("Matcher ECMWF: " + m.group());
 				    } else {
-					responseMap.put(task.getDecoder(),p_response);
+					responseMap.put(task.getDecoder(),new DecoderResponse(p_response,p_responseTime));
 				    }
+				    
 				    
 				    it.remove();
 				}
@@ -262,13 +268,13 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			    //avoid tight loop in "main" thread
 			    if(!tasks.isEmpty()) Thread.sleep(100);
 			    if (foundUrl) {
-				tasks.add(new GetRequestTask(ECCODES, url, routePlanner, this.executor));
+				tasks.add(new GetRequestTask(ECCODES, url, routePlanner, this.executor, ecmwfPostRequestTime));
 				Thread.sleep(100);
 			    }
 			}
 			//now you have all responses for all async requests
-
-			Result result = new Result(fileName, fileSize, md5ChkSum, 1);
+			long endOverallResponseTime = System.currentTimeMillis();
+			Result result = new Result(fileName, fileSize, md5ChkSum, 1,endOverallResponseTime - startOverallResponseTime);
 			result = processResponse(result, responseMap);
 			request.setAttribute("bufr", result);
 			boolean tempFileDeleted =tempFile.delete();
@@ -297,13 +303,13 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     }
 
 
-    public Result processResponse (Result p_result, HashMap<String,String> p_mapResponse) {
+    public Result processResponse (Result p_result, HashMap<String,DecoderResponse> p_mapResponse) {
 	Result result = p_result;
 	Gson gson = new Gson();
 	String errorMesg = null;
 	
-	String globusResponse = p_mapResponse.get(GLOBUS);
-	
+	String globusResponse = (p_mapResponse.get(GLOBUS)).getResponse();
+	long responseTime = (p_mapResponse.get(GLOBUS)).getResponseTime();
 	// DWD JSON Service - not yet published
 
 	ResponseJSON rdwd = gson.fromJson(globusResponse, ResponseJSON.class);
@@ -318,9 +324,9 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 		sb.append(e.getMessageID() + ": " + e.getErrorText());
 		sb.append("\n");
 	    }
-	    result.addDecoderResult(GLOBUS, false, sb.toString());
+	    result.addDecoderResult(GLOBUS, false, sb.toString(), responseTime);
 	} else {
-	    result.addDecoderResult(GLOBUS, true, null);
+	    result.addDecoderResult(GLOBUS, true, null, responseTime);
 	}
 	    
 
@@ -335,17 +341,19 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	}
 	*/
 
-	String ecCodesResponse = p_mapResponse.get(ECCODES);
-
+	String ecCodesResponse = (p_mapResponse.get(ECCODES)).getResponse();
+	responseTime = (p_mapResponse.get(ECCODES)).getResponseTime();
+	
 	if (ecCodesResponse == null || ecCodesResponse.contains("Error")) {
-	    result.addDecoderResult(ECCODES, false, "Error");
+	    result.addDecoderResult(ECCODES, false, "Error", responseTime);
 	    System.out.println("ecCodesResponse: " + ecCodesResponse);
 	} else {
-	    result.addDecoderResult(ECCODES, true, null);
+	    result.addDecoderResult(ECCODES, true, null, responseTime);
 	}
 
-	String pybufrKitResponse = p_mapResponse.get(PYBUFRKIT);
-
+	String pybufrKitResponse = p_mapResponse.get(PYBUFRKIT).getResponse();
+	responseTime = p_mapResponse.get(PYBUFRKIT).getResponseTime();
+	    
 	if (pybufrKitResponse.contains("\"status\": \"error\"")) {
 
 	   ResponsePyBufrKit rpy = gson.fromJson(pybufrKitResponse, ResponsePyBufrKit.class);
@@ -353,13 +361,14 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	       errorMesg = rpy.getMessage();
 	   }
 	   
-	    result.addDecoderResult(PYBUFRKIT, false, errorMesg);
+	   result.addDecoderResult(PYBUFRKIT, false, errorMesg, responseTime);
 	    System.out.println("pybufrkitResponse: " + pybufrKitResponse);
 	} else {
-	    result.addDecoderResult(PYBUFRKIT, true, null);
+	    result.addDecoderResult(PYBUFRKIT, true, null, responseTime);
 	}
 
-	String trollBufrResponse = p_mapResponse.get(TROLLBUFR);
+	String trollBufrResponse = p_mapResponse.get(TROLLBUFR).getResponse();
+	responseTime = p_mapResponse.get(TROLLBUFR).getResponseTime();
 	System.out.println("trollBUFR: " + trollBufrResponse);
 	/*
 	ResponseTrollBufr rtrollBufr = gson.fromJson(trollBufrResponse, ResponseTrollBufr.class);
@@ -374,11 +383,11 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	StringBuffer sbTroll = new StringBuffer(); 
 	for (int i=0; i < array.size(); i++) {
 	    JsonElement je = array.get(i);
-	    System.out.println("JsonElement: " + je);
+	    //System.out.println("JsonElement: " + je);
 	    ResponseTrollBufr rtrollBufr = gson.fromJson(je, ResponseTrollBufr.class);
-	    System.out.println("error: " + rtrollBufr.hasError() + " Msg: " + rtrollBufr.getError());
+	    //System.out.println("error: " + rtrollBufr.hasError() + " Msg: " + rtrollBufr.getError());
 	    if (rtrollBufr.hasError()) {
-		System.out.println("statusTroll");
+		//System.out.println("statusTroll");
 		statusTroll = false;
 		sbTroll.append(rtrollBufr.getError());
 	    }
@@ -390,7 +399,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    System.out.println("error: " + error);
 	    */
 
-	result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString());
+	result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString(),responseTime);
 	/*
 	ResponseTrollBufr rtrollBufr = gson.fromJson(trollBufrResponse, ResponseTrollBufr.class);
 	if (rtrollBufr != null) {
@@ -401,11 +410,21 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	return result;
     }
 
-
+    class DecoderResponse {
+	public String response;
+	public long responseTime = -1;
 	
+	public DecoderResponse(String response, long responseTime) {
+	    this.response = response;
+	    this.responseTime = responseTime;
+	}
+	public long getResponseTime() {
+	    return this.responseTime;
+	}
+	public String getResponse() {
+	    return this.response;
+	}
+    }
 
-    //Callable representing actual HTTP GET request
-	
-    //Callable representing actual HTTP POST request
-
+    
 }
