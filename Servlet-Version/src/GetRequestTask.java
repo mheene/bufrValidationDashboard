@@ -30,6 +30,10 @@ public class GetRequestTask implements IfcRequestTask {
 	return this.decoder;
     }
 	
+    public long getResponseTime() {
+	return this.work.getResponseTime();
+    }
+    
     public String getResponse() {
 	try {
 	    return this.task.get();

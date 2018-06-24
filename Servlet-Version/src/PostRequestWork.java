@@ -30,7 +30,8 @@ public class PostRequestWork implements Callable<String> {
     private final String fieldName;
     private File file;
     private final DefaultProxyRoutePlanner routePlanner;
-		
+    private long responseTime = -1;
+    
     public PostRequestWork(String url, String fileName, String fieldName, File file, DefaultProxyRoutePlanner routePlanner) {
 	this.url = url;
 	this.fileName = fileName;
@@ -54,7 +55,11 @@ public class PostRequestWork implements Callable<String> {
     public File getFile() {
 	return this.file;
     }
-		
+
+    public long getResponseTime() {
+	return this.responseTime;
+    }
+    
     public String call() throws Exception {
 
 	CloseableHttpClient httpclient;
@@ -67,7 +72,9 @@ public class PostRequestWork implements Callable<String> {
 	}                                                                                                               
 
 	String returnValue = "";
+	long startTime = System.currentTimeMillis();
 	try {
+
 	    HttpPost httppost = new HttpPost(getUrl());
 
 	    FileBody bin = new FileBody(getFile());
@@ -96,6 +103,9 @@ public class PostRequestWork implements Callable<String> {
 	} finally {
 	    httpclient.close();
 	}
+	long endTime = System.currentTimeMillis();
+	this.responseTime = (endTime - startTime);
+	System.out.println("URL: " + getUrl() + " : " + this.responseTime + " ms"); 
 	return returnValue;
     }
 }

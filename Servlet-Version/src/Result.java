@@ -8,14 +8,16 @@ public class Result {
     public String md5CheckSum = "";
     public long messages = -1;
     public boolean present = true;
+    public long overallResponseTime = -1;
 
     public List<DecoderResult> decoderResults = new ArrayList<DecoderResult>();
 
-    public Result(String fileName, long fileSize, String md5CheckSum, long messages) {
+    public Result(String fileName, long fileSize, String md5CheckSum, long messages, long overallResponseTime) {
 	this.fileName = fileName;
 	this.fileSize = fileSize;
 	this.md5CheckSum = md5CheckSum;
 	this.messages = messages;
+	this.overallResponseTime = overallResponseTime;
     }
 
 
@@ -35,6 +37,14 @@ public class Result {
 	return this.messages;
     }
 
+    public long getOverallResponseTime() {
+	return this.overallResponseTime;
+    }
+    
+    public void setOverallResponseTime(long ortime) {
+	this.overallResponseTime= ortime;
+    }
+
     public boolean isPresent() {
 	return this.present;
     }
@@ -47,8 +57,8 @@ public class Result {
 	return this.decoderResults;
     }
     
-    public void addDecoderResult(String decoder, boolean status, String error) {
-	decoderResults.add(new DecoderResult(decoder, status, error));
+    public void addDecoderResult(String decoder, boolean status, String error, long responseTime) {
+	decoderResults.add(new DecoderResult(decoder, status, error, responseTime));
     }
 
     public class DecoderResult {
@@ -56,13 +66,15 @@ public class Result {
 	public String decoder;
 	public boolean status;
 	public String error = null;
-
+	public long responseTime = -1;
+	
 	public HashMap<String, String> DECODER_MAP = BufrValidatorDashboardServlet.DECODER_MAP;
 	
-	public DecoderResult(String decoder, boolean status, String error) {
+	public DecoderResult(String decoder, boolean status, String error, long responseTime) {
 	    this.decoder = decoder;
 	    this.status = status;
 	    this.error = error;
+	    this.responseTime = responseTime;
 	}
 
 	public String getDecoder() {
@@ -74,6 +86,10 @@ public class Result {
 
 	public String getError() {
 	    return this.error;
+	}
+
+	public long getResponseTime() {
+	    return this.responseTime;
 	}
 
 	public String getUrl() {
