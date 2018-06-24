@@ -239,6 +239,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 			    String url = null;
 			    boolean foundUrl = false;
+			    long ecmwfPostRequestTime = 0;
 			    for(Iterator<IfcRequestTask> it = tasks.iterator(); it.hasNext();) {
 
 				IfcRequestTask task = it.next();
@@ -253,10 +254,13 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 				    if (m.find()) {
 					url = m.group();
 					foundUrl = true;
+					ecmwfPostRequestTime = p_responseTime;
+					System.out.println("ECMWF Post: " + ecmwfPostRequestTime);
 					//sb.append("Matcher ECMWF: " + m.group());
 				    } else {
 					responseMap.put(task.getDecoder(),new DecoderResponse(p_response,p_responseTime));
 				    }
+				    
 				    
 				    it.remove();
 				}
@@ -264,7 +268,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			    //avoid tight loop in "main" thread
 			    if(!tasks.isEmpty()) Thread.sleep(100);
 			    if (foundUrl) {
-				tasks.add(new GetRequestTask(ECCODES, url, routePlanner, this.executor));
+				tasks.add(new GetRequestTask(ECCODES, url, routePlanner, this.executor, ecmwfPostRequestTime));
 				Thread.sleep(100);
 			    }
 			}
@@ -422,8 +426,5 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	}
     }
 
-    //Callable representing actual HTTP GET request
-	
-    //Callable representing actual HTTP POST request
-
+    
 }

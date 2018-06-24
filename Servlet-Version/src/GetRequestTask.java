@@ -10,12 +10,14 @@ public class GetRequestTask implements IfcRequestTask {
     private GetRequestWork work;
     private FutureTask<String> task;
     private String decoder;
+    private long addPostRequestTime = 0;
     
-    public GetRequestTask( String decoder, String url, DefaultProxyRoutePlanner routePlanner, ExecutorService executor) {
+    public GetRequestTask( String decoder, String url, DefaultProxyRoutePlanner routePlanner, ExecutorService executor, long addPostRequestTime) {
 	this.decoder = decoder;
 	this.work = new GetRequestWork(url, routePlanner);
 	this.task = new FutureTask<String>(work);
 	executor.execute(this.task);
+	this.addPostRequestTime = addPostRequestTime;
     }
 
     public String getRequest() {
@@ -31,7 +33,7 @@ public class GetRequestTask implements IfcRequestTask {
     }
 	
     public long getResponseTime() {
-	return this.work.getResponseTime();
+	return (this.addPostRequestTime + this.work.getResponseTime());
     }
     
     public String getResponse() {
