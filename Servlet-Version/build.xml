@@ -1,6 +1,6 @@
-<project name="bv2web" default="dist" basedir=".">
+<project name="dashboard" default="dist" basedir=".">
   <description>
-    BUFR Viewer as a web-app  - default target = dist
+    BUFR Validator Dashboard  - default target = dist
   </description>
   <property file="build.properties" />
   <!-- set global properties for this build -->
@@ -9,6 +9,7 @@
   <property name="dist.home" location="dist"/>
   <property name="web.home" location="web"/>
   <property name="lib.dir"     value="libs"/>
+  <property name="tools.dir" location="tools"/>
   <property name="yui.compressor" value="${lib.dir}/yuicompressor-2.4.8.jar"/>
   <property name="html.compressor" value="${lib.dir}/htmlcompressor-1.5.3.jar"/>
     
@@ -50,7 +51,7 @@
   </target>
 
 <!-- ==================== Deploy ================================== -->
-<target name="deploy" depends="dist">
+<target name="deploy" depends="dist" description="Deploy on local server">
   <copy todir="${catalina.home}/webapps" file="${dist.home}/${app.name}.war"/>
 </target>
   
@@ -64,6 +65,18 @@
   Normally, this task is executed indirectly when needed.
 
 -->
+
+<!-- ==================== Deploy Openshift ================================== -->
+<target name="deploy-oc" depends="dist" description="Openshift deployment">
+   <exec executable="/bin/bash">
+    <arg value="${tools.dir}/deploy-oc.sh"/>
+    <arg value="${oc.username}"/>
+    <arg value="${oc.password}"/>
+    <arg value="${oc.appname}"/>
+    <arg value="${dist.home}/${app.name}.war"/>
+  </exec>
+</target>
+
 
 <!-- ==================== Prepare  ================================== -->
 
