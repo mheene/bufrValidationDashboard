@@ -83,7 +83,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     private static final int MAX_REQUEST_SIZE   = 1024 * 1024 * 20; // 20 MB
     public static final String ECCODES_URL = "http://apps.ecmwf.int/codes/bufr/validator/";
     //public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/uploadFile";
-    // DWD JSON Service - not yet released
+    // DWD JSON Service 
     public static final String DWD_URL = "https://kunden.dwd.de/bufrviewer/validatorFile";
     public static final String PYBUFRKIT_URL = "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile";
     public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/status";
@@ -96,6 +96,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     public static final String PYBUFRKIT = "PyBufrKit";
     public static final String TROLLBUFR = "TrollBUFR";
 
+    public static final String NO_RESPONSE = "No response";
     public static final HashMap<String, String> DECODER_MAP;
     
     static {
@@ -290,8 +291,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    
 	    System.out.println("ex: 2 " + ex.getMessage());
 	    System.out.println("ex: 2 " + ex.getClass().getName());
-	    //boolean tempFileDeleted = tempFile.delete();
-	    //System.out.println("Deleted tempFile: " + tempFileDeleted);
+	    boolean tempFileDeleted = tempFile.delete();
+	    System.out.println("Deleted tempFile: " + tempFileDeleted);
 	    getServletContext().getRequestDispatcher("/error").forward(
 									   request, response);
 	    return;
@@ -316,17 +317,21 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	if(rdwd !=null) {
 	    result.setMessages(rdwd.getMessageCounter());
 	}
-	
-	if (rdwd != null && rdwd.hasErrors()) {
-	    List<ErrorJSON> errors = rdwd.getEncounteredErrorsInMessagesArray();
-	    StringBuffer sb = new StringBuffer();
-	    for (ErrorJSON e : errors) {
-		sb.append(e.getMessageID() + ": " + e.getErrorText());
-		sb.append("\n");
+
+	if (globusResponse != null && globusResponse.length() > 0 ) {
+	    if (rdwd != null && rdwd.hasErrors()) {
+		List<ErrorJSON> errors = rdwd.getEncounteredErrorsInMessagesArray();
+		StringBuffer sb = new StringBuffer();
+		for (ErrorJSON e : errors) {
+		    sb.append(e.getMessageID() + ": " + e.getErrorText());
+		    sb.append("\n");
+		}
+		result.addDecoderResult(GLOBUS, false, sb.toString(), responseTime);
+	    } else {
+		result.addDecoderResult(GLOBUS, true, null, responseTime);
 	    }
-	    result.addDecoderResult(GLOBUS, false, sb.toString(), responseTime);
 	} else {
-	    result.addDecoderResult(GLOBUS, true, null, responseTime);
+	    result.addDecoderResult(GLOBUS, false, NO_RESPONSE, responseTime);
 	}
 	    
 
@@ -344,7 +349,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	String ecCodesResponse = (p_mapResponse.get(ECCODES)).getResponse();
 	responseTime = (p_mapResponse.get(ECCODES)).getResponseTime();
 	
-	if (ecCodesResponse == null || ecCodesResponse.contains("Error")) {
+	if (ecCodesResponse == null || ecCodesResponse.length() == 0 || ecCodesResponse.contains("Error")) {
 	    result.addDecoderResult(ECCODES, false, "Error", responseTime);
 	    System.out.println("ecCodesResponse: " + ecCodesResponse);
 	} else {
@@ -353,59 +358,48 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 	String pybufrKitResponse = p_mapResponse.get(PYBUFRKIT).getResponse();
 	responseTime = p_mapResponse.get(PYBUFRKIT).getResponseTime();
-	    
-	if (pybufrKitResponse.contains("\"status\": \"error\"")) {
 
-	   ResponsePyBufrKit rpy = gson.fromJson(pybufrKitResponse, ResponsePyBufrKit.class);
-	   if(rpy != null) {
-	       errorMesg = rpy.getMessage();
-	   }
-	   
-	   result.addDecoderResult(PYBUFRKIT, false, errorMesg, responseTime);
-	    System.out.println("pybufrkitResponse: " + pybufrKitResponse);
+	if (pybufrKitResponse.length() == 0) {
+	    result.addDecoderResult(PYBUFRKIT, false, NO_RESPONSE, responseTime);
 	} else {
-	    result.addDecoderResult(PYBUFRKIT, true, null, responseTime);
+	    if (pybufrKitResponse.contains("\"status\": \"error\"")) {
+
+		ResponsePyBufrKit rpy = gson.fromJson(pybufrKitResponse, ResponsePyBufrKit.class);
+		if(rpy != null) {
+		    errorMesg = rpy.getMessage();
+		}
+	   
+		result.addDecoderResult(PYBUFRKIT, false, errorMesg, responseTime);
+		System.out.println("pybufrkitResponse: " + pybufrKitResponse);
+	    } else {
+		result.addDecoderResult(PYBUFRKIT, true, null, responseTime);
+	    }
 	}
 
 	String trollBufrResponse = p_mapResponse.get(TROLLBUFR).getResponse();
 	responseTime = p_mapResponse.get(TROLLBUFR).getResponseTime();
 	System.out.println("trollBUFR: " + trollBufrResponse);
-	/*
-	ResponseTrollBufr rtrollBufr = gson.fromJson(trollBufrResponse, ResponseTrollBufr.class);
-	if (rtrollBufr != null) {
-	    System.out.println("error: " + rtrollBufr.getStatus() + " Msg: " + rtrollBufr.getMessage());
-	}
-	*/
-	
-	JsonParser parser = new JsonParser();
-	JsonArray array = parser.parse(trollBufrResponse).getAsJsonArray();
-	boolean statusTroll = true;
-	StringBuffer sbTroll = new StringBuffer(); 
-	for (int i=0; i < array.size(); i++) {
-	    JsonElement je = array.get(i);
-	    //System.out.println("JsonElement: " + je);
-	    ResponseTrollBufr rtrollBufr = gson.fromJson(je, ResponseTrollBufr.class);
-	    //System.out.println("error: " + rtrollBufr.hasError() + " Msg: " + rtrollBufr.getError());
-	    if (rtrollBufr.hasError()) {
-		//System.out.println("statusTroll");
-		statusTroll = false;
-		sbTroll.append(rtrollBufr.getError());
-	    }
-	}
-	    /*
-	    String status = ((JsonObject)je).getAsJsonObject("status").getAsString();
-	    System.out.println("status: " + status);
-	    String error = ((JsonObject)je).getAsJsonObject("error").getAsString();
-	    System.out.println("error: " + error);
-	    */
 
-	result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString(),responseTime);
-	/*
-	ResponseTrollBufr rtrollBufr = gson.fromJson(trollBufrResponse, ResponseTrollBufr.class);
-	if (rtrollBufr != null) {
-	    System.out.println("error: " + rtrollBufr.getStatus() + " Msg: " + rtrollBufr.getMessage());
+	if (trollBufrResponse.length() == 0) {
+	    result.addDecoderResult(TROLLBUFR, false, NO_RESPONSE ,responseTime);
+	} else {
+	    JsonParser parser = new JsonParser();
+	    JsonArray array = parser.parse(trollBufrResponse).getAsJsonArray();
+	    boolean statusTroll = true;
+	    StringBuffer sbTroll = new StringBuffer(); 
+	    for (int i=0; i < array.size(); i++) {
+		JsonElement je = array.get(i);
+	    //System.out.println("JsonElement: " + je);
+		ResponseTrollBufr rtrollBufr = gson.fromJson(je, ResponseTrollBufr.class);
+		//System.out.println("error: " + rtrollBufr.hasError() + " Msg: " + rtrollBufr.getError());
+		if (rtrollBufr.hasError()) {
+		    //System.out.println("statusTroll");
+		    statusTroll = false;
+		    sbTroll.append(rtrollBufr.getError());
+		}
+	    }
+	    result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString(),responseTime);
 	}
-	*/
 	
 	return result;
     }
