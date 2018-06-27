@@ -15,12 +15,3 @@ jdk:
 
 script: ant -f Servlet-Version/build.xml dist
 
-deploy:
-  provider: openshift
-  user: m.heene@web.de
-  password:
-    secure: txoIcrG1VYhjbD05OSOHb1O4+gcesNXdjntzMf1gvmwW+D+10hITYEjseybK36dEyGEjQGDCM9Qj+L280skRdxRh3ZLlLJpjvWXSZICJpswo5QgmcjDJ2VaR7pb64N2JhBxAy4PkZSwbuhvD3+qxg0F5+hgcJxOX+emlW5fiCx9t0WJ68AqUqc/52Sz8Ko3wmVC6J9hin93EPWlcwKsT529q7Ogb0SsooZSR4SLStZlhi7yTV7mh6ZoudoUn8hrMBzhZoKULfVMDwLBoNHQEmoInL9jfvEgmjWMgYjMjEwoEB4o0FHOKahbyYeGRYhckA6uRpGCUuKzWyZdQDmdOp8V2Wc2JH6Ysjek5uoxwUCqhfHhSVuH8i7tNVck/Dl6jJ0oZADfmFOEmtAyWIoe/SRAvcN8QcDD0J0DvCGJPCvWBPeMNsUGWJfS0liH1+Ack+KOf60uu8cqK6ZAMn6H3etL+egdT/KbM064GP+O4DpwJ9+qfPsV2Rgqoti2iR4Px31MRIqWOf09P64X6TIVMBRdXpNYQevacl0AoO6g9zUw8rmNzDKsHsiGlOhadumuf4yhcBXZQW7ok/Pn/IBLnxirhpRAem/dVaRVlgKUKpfoxI8I8+rMZe+366R6l9JJudAe2FIV4mawxozDndUro/GS+HdxdkH7P/4wcpuxgkdQ=
-  app: bufr
-  domain: 'http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com'
-  on:
-    repo: mheene/bufrValidationDashboard
