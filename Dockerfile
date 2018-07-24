@@ -3,7 +3,7 @@ MAINTAINER Markus Heene <markus.heene@gmail.com>
 
 COPY Servlet-Version /usr/src/Servlet-Version
 WORKDIR /usr/src/Servlet-Version
-RUN ant -f build.xml
+RUN ant -f build.xml -Dapp.name=dashboard
 
 FROM tomcat:9.0.10-jre10-slim
 RUN rm -rf /usr/local/tomcat/webapps/examples* && rm -rf /usr/local/tomcat/webapps/docs
