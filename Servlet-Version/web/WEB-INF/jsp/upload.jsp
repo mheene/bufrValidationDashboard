@@ -87,7 +87,8 @@
                 Powered by<br/>
                 <a href="https://github.com/ywangd/pybufrkit">PyBufrKit</a><br/>
                 <a href="https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home">ecCodes</a><br/>
-		<a href="https://github.com/alexmaul/flask_bufr">flask_bufr</a><br/>
+		<a href="https://github.com/alexmaul/trollbufr">trollbufr</a><br/>
+		<a href="https://launchpad.net/libecbufr">libECBUFR</a><br/>
             </div>
             <div class="col-md-4"> 
                <a href="https://github.com/mheene/bufrValidationDashboard">Source

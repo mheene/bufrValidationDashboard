@@ -4,6 +4,7 @@
 *.class
 
 # Editor backup files
+*~
 *.*~
 
 # Log file

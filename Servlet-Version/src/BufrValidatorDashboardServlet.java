@@ -88,6 +88,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     public static final String PYBUFRKIT_URL = "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile";
     public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/status";
     //    public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/json";
+    public static final String LIBECBUFR_URL = "http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX/uploadFile?output=json";
     
     public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
 
@@ -95,7 +96,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     public static final String ECCODES = "ecCodes (ECMWF)";
     public static final String PYBUFRKIT = "PyBufrKit";
     public static final String TROLLBUFR = "TrollBUFR";
-
+    public static final String LIBECBUFR = "libecBUFR";
+    
     public static final String NO_RESPONSE = "No response";
     public static final HashMap<String, String> DECODER_MAP;
     
@@ -106,6 +108,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	DECODER_MAP.put(ECCODES, ECCODES_URL);
 	DECODER_MAP.put(PYBUFRKIT,  "http://aws-bufr-webapp.s3-website-ap-southeast-2.amazonaws.com");
 	DECODER_MAP.put(TROLLBUFR, "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com");
+	DECODER_MAP.put(LIBECBUFR , "http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX");
     }
 
     //private Executor executor;
@@ -235,6 +238,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			tasks.add(new PostRequestTask(GLOBUS, DWD_URL, fileName, "uploadFile",tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(PYBUFRKIT, PYBUFRKIT_URL, fileName, "file",tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(TROLLBUFR, TROLLBUFR_URL, fileName, "the_file", tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(LIBECBUFR, LIBECBUFR_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
 			//now wait for all async tasks to complete
 			while(!tasks.isEmpty()) {
 
@@ -399,8 +403,20 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 		}
 	    }
 	    result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString(),responseTime);
+	    
 	}
-	
+
+	String libecBufrResponse = p_mapResponse.get(LIBECBUFR).getResponse();
+	responseTime = p_mapResponse.get(LIBECBUFR).getResponseTime();
+	System.out.println("libecBUFR: " + libecBufrResponse);
+	if ( libecBufrResponse.length() == 0 ) {
+	    result.addDecoderResult(LIBECBUFR, false, NO_RESPONSE, responseTime);
+	} else {
+	    GenericResponse rlibec = gson.fromJson(libecBufrResponse, GenericResponse.class);
+	    System.out.println("hasError: " + rlibec.hasError());
+	    result.addDecoderResult(LIBECBUFR,!rlibec.hasError(),rlibec.getError(),responseTime);
+	}
+
 	return result;
     }
 
