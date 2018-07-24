@@ -1,9 +1,19 @@
 # bufrValidationDashboard
 With the help of the BUFR validation dashboard a user could now easily check the BUFR with different decoders and receives warnings/errors of each decoder.
 
+Docker
+======
+If you have docker installed simply type
+
+docker run -it --rm -p 8888:8080 "mheene/bufrvalidationdashboard"
+
+Now open in a browser the [dashboard](http://localhost:8888/dashboard)
+
+That's it. The dashboard runs in a tomcat container on your computer on port 8888.
+
 Installation
 ============
-The directory Servlet-Version contains an initial prototype version for the BUFR Validation Dashboard.
+The directory Servlet-Version contains the BUFR Validation Dashboard.
 
 Copy the file build.properties-template to build.properties and change the to your local installation.
 At least you need to change catalina.home to your local installation. If you need a proxy to acces the internet configure the proxy setting in file /web/WEB-INF/web.xml
