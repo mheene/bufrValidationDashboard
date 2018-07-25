@@ -11,7 +11,9 @@ jdk:
 - openjdk9
 - openjdk10
 - openjdk11
-- oraclejdk-ea
+
+# Currently broken by travis
+# - oraclejdk-ea
 
 script: ant -f Servlet-Version/build.xml dist
 
