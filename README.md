@@ -1,5 +1,9 @@
 # bufrValidationDashboard
-With the help of the BUFR validation dashboard a user could now easily check the BUFR with different decoders and receives warnings/errors of each decoder.
+With the help of the BUFR validation dashboard users could now easily check a BUFR with different decoders and receive warnings/errors of each decoder. A online demonstrator is available here
+
+[Online Demonstrator, openshift cloud](http://bufr-wildfly01.193b.starter-ca-central-1.openshiftapps.com/dashboard)
+
+![Dashboard](https://raw.githubusercontent.com/mheene/bufrValidationDashboard/master/Servlet-Version/docs/gui.png)
 
 Docker
 ======
@@ -11,19 +15,23 @@ Now open in a browser the [dashboard](http://localhost:8888/dashboard)
 
 That's it. The dashboard runs in a tomcat container on your computer on port 8888.
 
+You can find the image [here](https://hub.docker.com/r/mheene/bufrvalidationdashboard)
+
 Installation
 ============
 The directory Servlet-Version contains the BUFR Validation Dashboard.
 
-Copy the file build.properties-template to build.properties and change the to your local installation.
+Copy the file build.properties-template to build.properties and change the content to your local installation.
 At least you need to change catalina.home to your local installation. If you need a proxy to acces the internet configure the proxy setting in file /web/WEB-INF/web.xml
 
 
 Create Distribution
 ===================
+Simply type
+
 ant dist
 
-You will find the distribution in the directory dist. If you run tomcat and changed in the build.properties the variable catalina.home then
+and you will find the distribution in the directory dist. If you run tomcat and changed in the build.properties the variable catalina.home then
 
 ant deploy
 
