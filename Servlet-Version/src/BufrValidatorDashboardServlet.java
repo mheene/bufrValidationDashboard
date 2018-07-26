@@ -96,7 +96,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     
     public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
 
-    public static final String GLOBUS = "BUFR Tools (DWD)";
+    public static final String GLOBUS  = "bufrtools (DWD)";
     public static final String ECCODES = "ecCodes (ECMWF)";
     public static final String PYBUFRKIT = "PyBufrKit";
     public static final String TROLLBUFR = "TrollBUFR";
@@ -293,7 +293,22 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			long endOverallResponseTime = System.currentTimeMillis();
 			Result result = new Result(fileName, fileSize, md5ChkSum, 1,endOverallResponseTime - startOverallResponseTime);
 			result = processResponse(result, responseMap);
-			request.setAttribute("bufr", result);
+
+			if (outputFormat == null) {
+			    request.setAttribute("bufr", result);
+			    getServletContext().getRequestDispatcher("/upload").forward(request, response);
+			}  else if (outputFormat.equals("text")) {
+			    response.setContentType("text/plain");
+			    request.setAttribute("text", result.toString());
+			    getServletContext().getRequestDispatcher("/text").forward(request, response);
+			} else if (outputFormat.equals("json")) {
+			    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			    String jsonResponseString = gson.toJson(result);
+			    response.setContentType("application/json; charset=UTF-8");
+			    request.setAttribute("json", jsonResponseString);
+			    getServletContext().getRequestDispatcher("/json").forward(request, response);
+
+			}
 			boolean tempFileDeleted =tempFile.delete();
 			System.out.println("Deleted tempFile: " + tempFileDeleted);
 						
@@ -314,8 +329,6 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    return;
 	}
 
-	getServletContext().getRequestDispatcher("/upload").forward(
-									request, response);
 
     }
 

@@ -45,6 +45,27 @@
   </servlet-mapping>
 
   <servlet>
+    <servlet-name>json</servlet-name>
+    <jsp-file>/WEB-INF/jsp/json.jsp</jsp-file>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>json</servlet-name>
+    <url-pattern>/json</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>text</servlet-name>
+    <jsp-file>/WEB-INF/jsp/text.jsp</jsp-file>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>text</servlet-name>
+    <url-pattern>/text</url-pattern>
+  </servlet-mapping>
+
+  
+  <servlet>
     <servlet-name>error</servlet-name>
     <jsp-file>/WEB-INF/jsp/error.jsp</jsp-file>
       <init-param>

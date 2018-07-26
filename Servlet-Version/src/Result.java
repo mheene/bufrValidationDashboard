@@ -56,11 +56,21 @@ public class Result {
     public List<DecoderResult> getDecoderResults() {
 	return this.decoderResults;
     }
-    
+
+   
     public void addDecoderResult(String decoder, boolean status, String error, long responseTime) {
 	decoderResults.add(new DecoderResult(decoder, status, error, responseTime));
     }
 
+    public String toString() {
+	String returnValue = "File: " + this.fileName + " contains " + this.messages + " messages\n\n" ;
+	for (int i = 0; i < this.decoderResults.size() ; i++) {
+	    returnValue = returnValue + this.decoderResults.get(i) + "\n";
+	}
+	return returnValue;
+	
+    }
+    
     public class DecoderResult {
 
 	public String decoder;
@@ -68,7 +78,7 @@ public class Result {
 	public String error = null;
 	public long responseTime = -1;
 	
-	public HashMap<String, String> DECODER_MAP = BufrValidatorDashboardServlet.DECODER_MAP;
+	public transient HashMap<String, String> DECODER_MAP = BufrValidatorDashboardServlet.DECODER_MAP;
 	
 	public DecoderResult(String decoder, boolean status, String error, long responseTime) {
 	    this.decoder = decoder;
@@ -94,6 +104,12 @@ public class Result {
 
 	public String getUrl() {
 	    return DECODER_MAP.get(this.decoder);
+	}
+
+	public String toString() {
+	    String returnValue = String.format("%-15s\t%5d ms\t%s\t%s", this.decoder , this.responseTime , this.status, this.error);
+					       //return this.decoder + "\t" + this.responseTime + " ms\t" + this.status + "\t" + this.error;
+	    return returnValue;
 	}
 
     }
