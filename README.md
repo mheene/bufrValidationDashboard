@@ -5,6 +5,20 @@ With the help of the BUFR validation dashboard users could now easily check a BU
 
 ![Dashboard](https://raw.githubusercontent.com/mheene/bufrValidationDashboard/master/Servlet-Version/docs/gui.png)
 
+Command Line Interface
+======================
+The the shell script checkBufr.sh you can easily check a BUFR with the different decoders from the command line.
+
+checkBufr.sh bufrFile
+
+![Screenshot](https://raw.githubusercontent.com/mheene/bufrValidationDashboard/master/Servlet-Version/docs/cli.png)
+
+Supported Decoder
+=================
+Currently the following decoders are included:
+BUFR Tools (DWD), ecCodes (ECMWF), PyBufrKit (Yang Wang), TrollBufr (Alex Maul), libECBUFR (Meteorological Service of Canada), Geo::BUFR (Pål Sannes), BUFRDC (ECMWF)
+
+
 Docker
 ======
 If you have docker installed simply type
