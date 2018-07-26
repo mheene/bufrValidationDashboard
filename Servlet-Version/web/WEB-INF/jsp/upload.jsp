@@ -89,6 +89,8 @@
                 <a href="https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home">ecCodes</a><br/>
 		<a href="https://github.com/alexmaul/trollbufr">trollbufr</a><br/>
 		<a href="https://launchpad.net/libecbufr">libECBUFR</a><br/>
+		<a href="https://metacpan.org/pod/Geo::BUFR">Geo::BUFR</a><br/>
+		<a href="https://confluence.ecmwf.int/display/BUFR/BUFRDC+Home">BUFRDC</a><br/>
             </div>
             <div class="col-md-4"> 
                <a href="https://github.com/mheene/bufrValidationDashboard">Source

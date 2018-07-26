@@ -65,7 +65,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 /**
  * A Java servlet that handles file upload from client.
  *
@@ -89,6 +90,9 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/status";
     //    public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/json";
     public static final String LIBECBUFR_URL = "http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX/uploadFile?output=json";
+    public static final String GEOBUFR_URL = "http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr/uploadFile?output=json";
+
+    public static final String BUFRDC_URL = "http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc/uploadFile?output=json";
     
     public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
 
@@ -97,6 +101,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     public static final String PYBUFRKIT = "PyBufrKit";
     public static final String TROLLBUFR = "TrollBUFR";
     public static final String LIBECBUFR = "libecBUFR";
+    public static final String GEOBUFR = "Geo::BUFR";
+    public static final String BUFRDC = "BUFRDC (ECMWF)";
     
     public static final String NO_RESPONSE = "No response";
     public static final HashMap<String, String> DECODER_MAP;
@@ -109,6 +115,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	DECODER_MAP.put(PYBUFRKIT,  "http://aws-bufr-webapp.s3-website-ap-southeast-2.amazonaws.com");
 	DECODER_MAP.put(TROLLBUFR, "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com");
 	DECODER_MAP.put(LIBECBUFR , "http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX");
+	DECODER_MAP.put(GEOBUFR, "http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr");
+	DECODER_MAP.put(BUFRDC, "http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc");
     }
 
     //private Executor executor;
@@ -161,7 +169,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
             writer.flush();
             return;
         }
- 
+	String outputFormat = request.getParameter("output");
+
 	ServletFileUpload upload = null;
 	String uploadPath = null;
 	File uploadDir = null;
@@ -239,6 +248,9 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			tasks.add(new PostRequestTask(PYBUFRKIT, PYBUFRKIT_URL, fileName, "file",tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(TROLLBUFR, TROLLBUFR_URL, fileName, "the_file", tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(LIBECBUFR, LIBECBUFR_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(GEOBUFR, GEOBUFR_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(BUFRDC, BUFRDC_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
+						
 			//now wait for all async tasks to complete
 			while(!tasks.isEmpty()) {
 
@@ -317,27 +329,32 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	long responseTime = (p_mapResponse.get(GLOBUS)).getResponseTime();
 	// DWD JSON Service - not yet published
 
-	ResponseJSON rdwd = gson.fromJson(globusResponse, ResponseJSON.class);
-	if(rdwd !=null) {
-	    result.setMessages(rdwd.getMessageCounter());
+	try {
+	    ResponseJSON rdwd = gson.fromJson(globusResponse, ResponseJSON.class);
+	    if(rdwd !=null) {
+		result.setMessages(rdwd.getMessageCounter());
+	    }
+
+	    if (globusResponse != null && globusResponse.length() > 0 ) {
+		if (rdwd != null && rdwd.hasErrors()) {
+		    List<ErrorJSON> errors = rdwd.getEncounteredErrorsInMessagesArray();
+		    StringBuffer sb = new StringBuffer();
+		    for (ErrorJSON e : errors) {
+			sb.append(e.getMessageID() + ": " + e.getErrorText());
+			sb.append("\n");
+		    }
+		    result.addDecoderResult(GLOBUS, false, sb.toString(), responseTime);
+		} else {
+		    result.addDecoderResult(GLOBUS, true, null, responseTime);
+		}
+	    } else {
+		result.addDecoderResult(GLOBUS, false, NO_RESPONSE, responseTime);
+	    }
+	}   catch (JsonSyntaxException jse) {
+		    System.out.println("globus error: " + jse.getMessage());
+		    result.addDecoderResult(GLOBUS, false, NO_RESPONSE ,responseTime);
 	}
 
-	if (globusResponse != null && globusResponse.length() > 0 ) {
-	    if (rdwd != null && rdwd.hasErrors()) {
-		List<ErrorJSON> errors = rdwd.getEncounteredErrorsInMessagesArray();
-		StringBuffer sb = new StringBuffer();
-		for (ErrorJSON e : errors) {
-		    sb.append(e.getMessageID() + ": " + e.getErrorText());
-		    sb.append("\n");
-		}
-		result.addDecoderResult(GLOBUS, false, sb.toString(), responseTime);
-	    } else {
-		result.addDecoderResult(GLOBUS, true, null, responseTime);
-	    }
-	} else {
-	    result.addDecoderResult(GLOBUS, false, NO_RESPONSE, responseTime);
-	}
-	    
 
 	System.out.println("GlobusResponse: " + globusResponse);
 	
@@ -367,17 +384,24 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    result.addDecoderResult(PYBUFRKIT, false, NO_RESPONSE, responseTime);
 	} else {
 	    if (pybufrKitResponse.contains("\"status\": \"error\"")) {
-
-		ResponsePyBufrKit rpy = gson.fromJson(pybufrKitResponse, ResponsePyBufrKit.class);
-		if(rpy != null) {
-		    errorMesg = rpy.getMessage();
-		}
+		try {
+		    ResponsePyBufrKit rpy = gson.fromJson(pybufrKitResponse, ResponsePyBufrKit.class);
+		    if(rpy != null) {
+			errorMesg = rpy.getMessage();
+		    }
 	   
-		result.addDecoderResult(PYBUFRKIT, false, errorMesg, responseTime);
-		System.out.println("pybufrkitResponse: " + pybufrKitResponse);
-	    } else {
-		result.addDecoderResult(PYBUFRKIT, true, null, responseTime);
-	    }
+		    result.addDecoderResult(PYBUFRKIT, false, errorMesg, responseTime);
+		    System.out.println("pybufrkitResponse: " + pybufrKitResponse);
+		}  catch (JsonSyntaxException jse) {
+		    System.out.println("pybufrKit error: " + jse.getMessage());
+		    result.addDecoderResult(PYBUFRKIT, false, NO_RESPONSE ,responseTime);
+		}
+
+
+		
+		} else {
+		    result.addDecoderResult(PYBUFRKIT, true, null, responseTime);
+		}
 	}
 
 	String trollBufrResponse = p_mapResponse.get(TROLLBUFR).getResponse();
@@ -387,23 +411,27 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	if (trollBufrResponse.length() == 0) {
 	    result.addDecoderResult(TROLLBUFR, false, NO_RESPONSE ,responseTime);
 	} else {
-	    JsonParser parser = new JsonParser();
-	    JsonArray array = parser.parse(trollBufrResponse).getAsJsonArray();
-	    boolean statusTroll = true;
-	    StringBuffer sbTroll = new StringBuffer(); 
-	    for (int i=0; i < array.size(); i++) {
-		JsonElement je = array.get(i);
-	    //System.out.println("JsonElement: " + je);
-		ResponseTrollBufr rtrollBufr = gson.fromJson(je, ResponseTrollBufr.class);
-		//System.out.println("error: " + rtrollBufr.hasError() + " Msg: " + rtrollBufr.getError());
-		if (rtrollBufr.hasError()) {
-		    //System.out.println("statusTroll");
-		    statusTroll = false;
-		    sbTroll.append(rtrollBufr.getError());
+	    try {
+		JsonParser parser = new JsonParser();
+		JsonArray array = parser.parse(trollBufrResponse).getAsJsonArray();
+		boolean statusTroll = true;
+		StringBuffer sbTroll = new StringBuffer(); 
+		for (int i=0; i < array.size(); i++) {
+		    JsonElement je = array.get(i);
+		    //System.out.println("JsonElement: " + je);
+		    ResponseTrollBufr rtrollBufr = gson.fromJson(je, ResponseTrollBufr.class);
+		    //System.out.println("error: " + rtrollBufr.hasError() + " Msg: " + rtrollBufr.getError());
+		    if (rtrollBufr.hasError()) {
+			//System.out.println("statusTroll");
+			statusTroll = false;
+			sbTroll.append(rtrollBufr.getError());
+		    }
 		}
+		result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString(),responseTime);
+	    } catch (JsonParseException jpe) {
+		System.out.println("TrollBUFR error: " + jpe.getMessage());
+		result.addDecoderResult(TROLLBUFR, false, NO_RESPONSE ,responseTime);
 	    }
-	    result.addDecoderResult(TROLLBUFR, statusTroll, sbTroll.toString(),responseTime);
-	    
 	}
 
 	String libecBufrResponse = p_mapResponse.get(LIBECBUFR).getResponse();
@@ -412,10 +440,53 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	if ( libecBufrResponse.length() == 0 ) {
 	    result.addDecoderResult(LIBECBUFR, false, NO_RESPONSE, responseTime);
 	} else {
-	    GenericResponse rlibec = gson.fromJson(libecBufrResponse, GenericResponse.class);
-	    System.out.println("hasError: " + rlibec.hasError());
-	    result.addDecoderResult(LIBECBUFR,!rlibec.hasError(),rlibec.getError(),responseTime);
+	    try {
+		GenericResponse rlibec = gson.fromJson(libecBufrResponse, GenericResponse.class);
+		System.out.println("hasError: " + rlibec.hasError());
+		result.addDecoderResult(LIBECBUFR,!rlibec.hasError(),rlibec.getError(),responseTime);
+	    } catch (JsonSyntaxException jse) {
+		System.out.println("libecBUFR error: " + jse.getMessage());
+		result.addDecoderResult(LIBECBUFR, false, NO_RESPONSE ,responseTime);
+	
+	    }
+					     
 	}
+
+	String geoBufrResponse = p_mapResponse.get(GEOBUFR).getResponse();
+	responseTime = p_mapResponse.get(GEOBUFR).getResponseTime();
+	System.out.println("GeoBUFR: " + geoBufrResponse);
+	if ( geoBufrResponse.length() == 0 ) {
+	    result.addDecoderResult(GEOBUFR, false, NO_RESPONSE, responseTime);
+	} else {
+	    try {
+		GenericResponse rgeoBufr = gson.fromJson(geoBufrResponse, GenericResponse.class);
+		System.out.println("hasError: " + rgeoBufr.hasError());
+		result.addDecoderResult(GEOBUFR,!rgeoBufr.hasError(),rgeoBufr.getError(),responseTime);
+	    } catch (JsonSyntaxException jse) {
+		System.out.println("geoBUFR error: " + jse.getMessage());
+		result.addDecoderResult(GEOBUFR, false, NO_RESPONSE ,responseTime);
+	
+	    }
+	}
+
+
+	String bufrDCResponse = p_mapResponse.get(BUFRDC).getResponse();
+	responseTime = p_mapResponse.get(BUFRDC).getResponseTime();
+	System.out.println("BUFRDC: " + bufrDCResponse);
+	if ( bufrDCResponse.length() == 0 ) {
+	    result.addDecoderResult(BUFRDC, false, NO_RESPONSE, responseTime);
+	} else {
+	    try {
+		GenericResponse rbufrDC = gson.fromJson(bufrDCResponse, GenericResponse.class);
+		System.out.println("hasError: " + rbufrDC.hasError());
+		result.addDecoderResult(BUFRDC,!rbufrDC.hasError(),rbufrDC.getError(),responseTime);
+	    }  catch (JsonSyntaxException jse) {
+		System.out.println("BUFRDC error: " + jse.getMessage());
+		result.addDecoderResult(BUFRDC, false, NO_RESPONSE ,responseTime);
+	
+	    }
+	}
+
 
 	return result;
     }
