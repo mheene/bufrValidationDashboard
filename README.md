@@ -1,4 +1,7 @@
 # bufrValidationDashboard
+
+[![Build Status](https://api.travis-ci.org/mheene/bufrValidationDashboard.svg?branch=master)]
+
 With the help of the BUFR validation dashboard users could now easily check a BUFR with different decoders and receive warnings/errors of each decoder. An online demonstrator is available here
 
 [Online Demonstrator, openshift cloud](http://bufr-wildfly01.193b.starter-ca-central-1.openshiftapps.com/dashboard)
@@ -38,6 +41,8 @@ Now open in a browser the [dashboard](http://localhost:8888/dashboard)
 That's it. The dashboard runs in a tomcat container on your computer on port 8888.
 
 You can find the image [here](https://hub.docker.com/r/mheene/bufrvalidationdashboard)
+![Docker Build](https://img.shields.io/docker/build/mheene/bufrvalidationdashboard.svg)
+![Docker Pulls](https://img.shields.io/docker/pulls/mheene/bufrvalidationdashboard.svg)
 
 Installation
 ============
