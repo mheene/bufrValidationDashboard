@@ -63,10 +63,14 @@ public class Result {
     }
 
     public String toString() {
-	String returnValue = "File: " + this.fileName + " contains " + this.messages + " messages\n\n" ;
+
+
+	String p_message = (this.messages == 1) ? " message\n\n" : " messages\n\n";
+	String returnValue = "File: " + this.fileName + " contains " + this.messages + p_message; 
 	for (int i = 0; i < this.decoderResults.size() ; i++) {
 	    returnValue = returnValue + this.decoderResults.get(i) + "\n";
 	}
+	
 	return returnValue;
 	
     }
@@ -107,8 +111,15 @@ public class Result {
 	}
 
 	public String toString() {
-	    String returnValue = String.format("%-15s\t%5d ms\t%s\t%s", this.decoder , this.responseTime , this.status, this.error);
-					       //return this.decoder + "\t" + this.responseTime + " ms\t" + this.status + "\t" + this.error;
+	    String returnValue = String.format("%-15s\t%5d ms\t%s\t%s", this.decoder , this.responseTime , this.status, (this.error != null) ? this.error.trim() : "" );
+
+	    //return this.decoder + "\t" + this.responseTime + " ms\t" + this.status + "\t" + this.error;
+	    /*
+	    returnValue = returnValue.replaceAll("\n", " ");
+	    if (returnValue.length() > 80) {
+		returnValue = returnValue + "\n";
+	    }
+	    */
 	    return returnValue;
 	}
 

@@ -85,11 +85,11 @@
             </div>
             <div class="col-md-4">
                 Powered by<br/>
-                <a href="https://github.com/ywangd/pybufrkit">PyBufrKit</a><br/>
+                <a href="https://github.com/ywangd/pybufrkit">PyBufrKit</a>&nbsp;&ensp;&emsp;&emsp;
                 <a href="https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home">ecCodes</a><br/>
+		<a href="https://launchpad.net/libecbufr">libECBUFR</a>&emsp;&emsp;
 		<a href="https://github.com/alexmaul/trollbufr">trollbufr</a><br/>
-		<a href="https://launchpad.net/libecbufr">libECBUFR</a><br/>
-		<a href="https://metacpan.org/pod/Geo::BUFR">Geo::BUFR</a><br/>
+		<a href="https://metacpan.org/pod/Geo::BUFR">Geo::BUFR</a>&emsp;&emsp;
 		<a href="https://confluence.ecmwf.int/display/BUFR/BUFRDC+Home">BUFRDC</a><br/>
             </div>
             <div class="col-md-4"> 
