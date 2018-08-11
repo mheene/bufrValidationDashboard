@@ -75,6 +75,6 @@ Please note that this is an inital commit for discussion purposes only. Some val
 
 [Online Demonstrator, openshift cloud](http://bufr-wildfly01.193b.starter-ca-central-1.openshiftapps.com/dashboard)
 
-[Online Demonstrator based on primefaces, IRIMO](http://forecast.irimo.ir/BufrValidation/)
+[Online Demonstrator based on primefaces, IRIMO](http://bufrchk.irimo.ir)
 
 Your feedback is highly welcomed.

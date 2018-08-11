@@ -11,7 +11,7 @@
     <display-name>BufrValidatorDashboardServlet</display-name>
     <servlet-name>BufrValidatorDashboardServlet</servlet-name>
     <servlet-class>BufrValidatorDashboardServlet</servlet-class>
-    <load-on-startup>0</load-on-startup>
+
       <init-param>
             <param-name>storeFiles</param-name>
             <param-value>false</param-value>
@@ -26,7 +26,7 @@
             <param-value>proxy.port</param-value>
       </init-param>
 -->
-
+    <load-on-startup>0</load-on-startup>
   </servlet>
    
   <servlet-mapping>
