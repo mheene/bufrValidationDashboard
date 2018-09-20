@@ -89,10 +89,17 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
     public static final String PYBUFRKIT_URL = "https://z07g0b8s50.execute-api.ap-southeast-2.amazonaws.com/dev/decodeFile";
     public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/status";
     //    public static final String TROLLBUFR_URL = "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com/decode/json";
+
+    /** External Decoders 
     public static final String LIBECBUFR_URL = "http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX/uploadFile?output=json";
     public static final String GEOBUFR_URL = "http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr/uploadFile?output=json";
 
     public static final String BUFRDC_URL = "http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc/uploadFile?output=json";
+    */
+
+    public String LIBECBUFR_URL;
+    public String GEOBUFR_URL;
+    public String BUFRDC_URL;
     
     public static final Pattern PATTERN_ECMWF = Pattern.compile("https\\://stream\\.ecmwf\\.int.*json");
 
@@ -135,7 +142,10 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 
 	String proxyHost = getServletConfig().getInitParameter("proxyHost");
 	String proxyPort = getServletConfig().getInitParameter("proxyPort");
-
+	LIBECBUFR_URL = getServletConfig().getInitParameter("LIBECBUFR_URL");
+	GEOBUFR_URL = getServletConfig().getInitParameter("GEOBUFR_URL");
+	BUFRDC_URL = getServletConfig().getInitParameter("BUFRDC_URL");
+	
 	System.out.println("ProxyHost: " + proxyHost);
 	System.out.println("ProxyPort: " + proxyPort);
 
@@ -247,9 +257,9 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 			tasks.add(new PostRequestTask(GLOBUS, DWD_URL, fileName, "uploadFile",tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(PYBUFRKIT, PYBUFRKIT_URL, fileName, "file",tempFile, this.executor, routePlanner));
 			tasks.add(new PostRequestTask(TROLLBUFR, TROLLBUFR_URL, fileName, "the_file", tempFile, this.executor, routePlanner));
-			tasks.add(new PostRequestTask(LIBECBUFR, LIBECBUFR_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
-			tasks.add(new PostRequestTask(GEOBUFR, GEOBUFR_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
-			tasks.add(new PostRequestTask(BUFRDC, BUFRDC_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(LIBECBUFR, this.LIBECBUFR_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(GEOBUFR, this.GEOBUFR_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
+			tasks.add(new PostRequestTask(BUFRDC, this.BUFRDC_URL, fileName, "uploadFile", tempFile, this.executor, routePlanner));
 						
 			//now wait for all async tasks to complete
 			while(!tasks.isEmpty()) {

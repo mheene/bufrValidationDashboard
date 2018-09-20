@@ -16,6 +16,41 @@
             <param-name>storeFiles</param-name>
             <param-value>false</param-value>
       </init-param>
+      <!-- Provide URLs for each BUFR Decoder Service used by the Servlet -->
+      <init-param>
+        <param-name>LIBECBUFR_URL</param-name>
+	<param-value>http://localhost:8080/libecBufrX/uploadFile?output=json</param-value>
+	<!--
+            <param-value>http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX/uploadFile?output=json</param-value>
+	-->
+      </init-param>
+      <init-param>
+            <param-name>GEOBUFR_URL</param-name>
+            <param-value>http://localhost:8080/geobufr/uploadFile?output=json</param-value>
+	    <!--
+		<param-value>http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr/uploadFile?output=json</param-value>
+		-->
+      </init-param>
+      <init-param>
+            <param-name>BUFRDC_URL</param-name>
+            <param-value>http://localhost:8080/bufrdc/uploadFile?output=json</param-value>
+	    <param-value>http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc/uploadFile?output=json</param-value>
+      </init-param>
+      <!-- Provide URLs for each BUFR Decoder Frontend on the web -->
+      <init-param>
+            <param-name>LIBECBUFR</param-name>
+            <param-value>http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX</param-value>
+      </init-param>
+      <init-param>
+            <param-name>GEOBUFR</param-name>
+            <param-value>http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr</param-value>
+      </init-param>
+      <init-param>
+            <param-name>BUFRDC</param-name>
+            <param-value>http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc</param-value>
+      </init-param>
+
+      <!-- Proxy Configuration -->
       <!--
       <init-param>
             <param-name>proxyHost</param-name>
