@@ -1,7 +1,0 @@
-<!--
-<Context>
-  <Valve 
-    className="org.apache.catalina.valves.StuckThreadDetectionValve"
-    threshold="60" />
-</Context>
--->
