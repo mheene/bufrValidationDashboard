@@ -34,7 +34,9 @@
       <init-param>
             <param-name>BUFRDC_URL</param-name>
             <param-value>http://localhost:8080/bufrdc/uploadFile?output=json</param-value>
-	    <param-value>http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc/uploadFile?output=json</param-value>
+	    <!--
+		<param-value>http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc/uploadFile?output=json</param-value>
+		-->
       </init-param>
       <!-- Provide URLs for each BUFR Decoder Frontend on the web -->
       <init-param>
