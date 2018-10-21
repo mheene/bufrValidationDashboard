@@ -4,7 +4,7 @@
 
 With the help of the BUFR validation dashboard users could now easily check a BUFR with different decoders and receive warnings/errors of each decoder. An online demonstrator is available here
 
-[Online Demonstrator, openshift cloud](http://bufr-wildfly01.193b.starter-ca-central-1.openshiftapps.com/dashboard)
+[Online Demonstrator, openshift cloud](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/dashboard/)
 
 ![Dashboard](https://raw.githubusercontent.com/mheene/bufrValidationDashboard/master/Servlet-Version/docs/gui.png)
 
@@ -24,9 +24,9 @@ Currently the following decoders are included:
  * ecCodes (ECMWF) [Online version provided by ECMWF](http://apps.ecmwf.int/codes/bufr/validator/)
  * PyBufrKit (Yang Wang) [Online version provided by Yang](http://aws-bufr-webapp.s3-website-ap-southeast-2.amazonaws.com)
  * TrollBufr (Alex Maul) [Online version provided by Alex](http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com) 
- * libECBUFR (Meteorological Service of Canada) [Self created online version](http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX)
- * Geo::BUFR (Pål Sannes) [Self created online version](http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr)
- * BUFRDC (ECMWF) [Self created online version](http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc)
+ * libECBUFR (Meteorological Service of Canada) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/dashboard/libecBufrX)
+ * Geo::BUFR (Pål Sannes) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/dashboard/geobufr)
+ * BUFRDC (ECMWF) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/dashboard/bufrdc)
 
 
 Docker
