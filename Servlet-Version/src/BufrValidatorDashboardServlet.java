@@ -121,9 +121,17 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	DECODER_MAP.put(ECCODES, ECCODES_URL);
 	DECODER_MAP.put(PYBUFRKIT,  "http://aws-bufr-webapp.s3-website-ap-southeast-2.amazonaws.com");
 	DECODER_MAP.put(TROLLBUFR, "http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com");
-	DECODER_MAP.put(LIBECBUFR , "http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX");
-	DECODER_MAP.put(GEOBUFR, "http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr");
-	DECODER_MAP.put(BUFRDC, "http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc");
+	
+	String OPENSHIFT_URL = System.getenv("DECODER_URL");
+	if (OPENSHIFT_URL != null) {	
+	    	DECODER_MAP.put(LIBECBUFR , OPENSHIFT_URL +"/libecBufrX");
+		DECODER_MAP.put(GEOBUFR, OPENSHIFT_URL + "/geobufr");
+		DECODER_MAP.put(BUFRDC, OPENSHIFT_URL + "/bufrdc");
+	} else {
+	    DECODER_MAP.put(LIBECBUFR , "http://dev-bufr.1d35.starter-us-east-1.openshiftapps.com/libecBufrX");
+	    DECODER_MAP.put(GEOBUFR, "http://geobufr-geobufr.a3c1.starter-us-west-1.openshiftapps.com/geobufr");
+	    DECODER_MAP.put(BUFRDC, "http://bufrd-bufrdc.193b.starter-ca-central-1.openshiftapps.com/bufrdc");
+	}
     }
 
     //private Executor executor;
@@ -148,7 +156,8 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	
 	System.out.println("ProxyHost: " + proxyHost);
 	System.out.println("ProxyPort: " + proxyPort);
-
+	System.out.println("Server: " + getServletConfig().getServletContext().getServerInfo());
+	System.out.println("URL Resource: " + getServletConfig().getServletContext().getRealPath("/"));
 	if (proxyHost != null) {
 	    try {
 		HttpHost proxy = new HttpHost(proxyHost, Integer.parseInt(proxyPort));
