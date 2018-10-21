@@ -24,9 +24,9 @@ Currently the following decoders are included:
  * ecCodes (ECMWF) [Online version provided by ECMWF](http://apps.ecmwf.int/codes/bufr/validator/)
  * PyBufrKit (Yang Wang) [Online version provided by Yang](http://aws-bufr-webapp.s3-website-ap-southeast-2.amazonaws.com)
  * TrollBufr (Alex Maul) [Online version provided by Alex](http://flask-bufr-flasked-bufr.193b.starter-ca-central-1.openshiftapps.com) 
- * libECBUFR (Meteorological Service of Canada) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/dashboard/libecBufrX)
- * Geo::BUFR (Pål Sannes) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/dashboard/geobufr)
- * BUFRDC (ECMWF) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/dashboard/bufrdc)
+ * libECBUFR (Meteorological Service of Canada) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/libecBufrX)
+ * Geo::BUFR (Pål Sannes) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/geobufr)
+ * BUFRDC (ECMWF) [Self created online version](http://bufr-allinone.7e14.starter-us-west-2.openshiftapps.com/bufrdc)
 
 
 Docker
