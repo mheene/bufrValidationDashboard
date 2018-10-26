@@ -402,7 +402,10 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	String ecCodesResponse = (p_mapResponse.get(ECCODES)).getResponse();
 	responseTime = (p_mapResponse.get(ECCODES)).getResponseTime();
 	
-	if (ecCodesResponse == null || ecCodesResponse.length() == 0 || ecCodesResponse.contains("Error")) {
+	if (ecCodesResponse == null || ecCodesResponse.length() == 0 ) {
+	    result.addDecoderResult(ECCODES, false, NO_RESPONSE, responseTime);
+	    System.out.println("ecCodesResponse: " + ecCodesResponse);
+	} else if (ecCodesResponse.contains("Error")){
 	    result.addDecoderResult(ECCODES, false, "Error", responseTime);
 	    System.out.println("ecCodesResponse: " + ecCodesResponse);
 	} else {

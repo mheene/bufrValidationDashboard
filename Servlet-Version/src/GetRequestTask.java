@@ -40,7 +40,11 @@ public class GetRequestTask implements IfcRequestTask {
 	try {
 	    return this.task.get();
 	} catch(Exception e) {
-	    throw new RuntimeException(e);
+	    System.out.println("Decoder: " + this.getDecoder() + " throws an error.");
+	    System.out.println("Ex: " + e.toString());
+	    return "";
+
+	    //throw new RuntimeException(e);
 	}
     }
 }

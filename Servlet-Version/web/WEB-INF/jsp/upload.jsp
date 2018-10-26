@@ -28,8 +28,11 @@
     	  	<form method="post" action="uploadFile" enctype="multipart/form-data">
             	      <p>Select file to upload:</p>
 		      <p>
-		      <input type="file" name="uploadFile" class="file btn btn-primary" style="display:inline-block;"/>
-            	      <input type="submit" class="btn btn-primary" value="Upload" />
+		      <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+		      	   <input type="file" name="uploadFile" class="file btn btn-primary" style="display:inline-block;"/>
+			   <p>&nbsp;</p>
+            	      	   <input type="submit" class="btn btn-primary" value="Upload" />
+		      </div>
 		      </p>
 		
           	</form>

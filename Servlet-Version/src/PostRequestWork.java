@@ -20,6 +20,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.http.HttpHost;
+
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.config.RequestConfig.Builder;
+
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 
 
@@ -31,6 +36,7 @@ public class PostRequestWork implements Callable<String> {
     private File file;
     private final DefaultProxyRoutePlanner routePlanner;
     private long responseTime = -1;
+    public static final int TIMEOUT = 15 * 1000; // in ms
     
     public PostRequestWork(String url, String fileName, String fieldName, File file, DefaultProxyRoutePlanner routePlanner) {
 	this.url = url;
@@ -76,8 +82,19 @@ public class PostRequestWork implements Callable<String> {
 	
 	try {
 
+	    //	    HttpPost httppost = new HttpPost(getUrl());
+
 	    HttpPost httppost = new HttpPost(getUrl());
 
+	    RequestConfig.Builder requestConfig = RequestConfig.custom();
+	    requestConfig.setConnectTimeout(PostRequestWork.TIMEOUT);
+	    requestConfig.setConnectionRequestTimeout(PostRequestWork.TIMEOUT);
+	    requestConfig.setSocketTimeout(PostRequestWork.TIMEOUT);
+
+	    httppost.setConfig(requestConfig.build());
+
+
+	    
 	    FileBody bin = new FileBody(getFile());
 	    HttpEntity reqEntity = MultipartEntityBuilder.create()
 		.addPart(getFieldName(), bin)          
