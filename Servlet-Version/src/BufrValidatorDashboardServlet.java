@@ -250,6 +250,7 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 						
 			tempFile = File.createTempFile("prefix-", "-suffix");
 			tempFile.deleteOnExit();
+			// add for LGTM checks
 			try (FileOutputStream out = new FileOutputStream(tempFile)){
 			    IOUtils.copy(is, out);
 			    out.flush();
