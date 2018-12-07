@@ -250,9 +250,10 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 						
 			tempFile = File.createTempFile("prefix-", "-suffix");
 			tempFile.deleteOnExit();
-			FileOutputStream out = new FileOutputStream(tempFile);
-			IOUtils.copy(is, out);
-			out.flush();
+			try (FileOutputStream out = new FileOutputStream(tempFile)){
+			    IOUtils.copy(is, out);
+			    out.flush();
+			}
 
 			md5ChkSum = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
 			StringBuffer sb = new StringBuffer();
@@ -341,8 +342,9 @@ public class BufrValidatorDashboardServlet extends HttpServlet {
 	    
 	    System.out.println("ex: 2 " + ex.getMessage());
 	    System.out.println("ex: 2 " + ex.getClass().getName());
-	    boolean tempFileDeleted = tempFile.delete();
-	    System.out.println("Deleted tempFile: " + tempFileDeleted);
+	    if (tempFile != null) {
+		System.out.println("Deleted tempFile: " + tempFile.delete());
+	    }
 	    getServletContext().getRequestDispatcher("/error").forward(
 									   request, response);
 	    return;
