@@ -10,6 +10,7 @@ jdk:
 - openjdk9
 - openjdk10
 - openjdk11
+- openjdk-ea
 
 # Currently broken by travis
 # - oraclejdk-ea
