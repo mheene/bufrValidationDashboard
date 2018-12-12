@@ -1,6 +1,7 @@
 # bufrValidationDashboard
 
-![Build Status](https://api.travis-ci.org/mheene/bufrValidationDashboard.svg?branch=master)
+![Build Status](https://api.travis-ci.org/mheene/bufrValidationDashboard.svg?branch=master) [![Total alerts](https://img.shields.io/lgtm/alerts/g/mheene/bufrValidationDashboard.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mheene/bufrValidationDashboard/alerts/)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/mheene/bufrValidationDashboard.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/mheene/bufrValidationDashboard/alerts/)
 
 With the help of the BUFR validation dashboard users could now easily check a BUFR with different decoders and receive warnings/errors of each decoder. An online demonstrator is available here
 
