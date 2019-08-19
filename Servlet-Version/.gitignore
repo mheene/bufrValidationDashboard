@@ -7,6 +7,12 @@
 *~
 *.*~
 
+# build dir
+build/
+
+# own build.properties
+build.properties
+
 # Log file
 *.log
 *.iml

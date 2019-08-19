@@ -1,15 +1,17 @@
 import java.util.List;
 import java.util.Iterator;
 
+@SuppressWarnings("rawtypes")
 public class ResponseTrollBufr {
 
-	public String bufr;
+	public List bufr;
 	public String error;
 	public String heading;
 	public int index;
 	public boolean status;
 
-	public ResponseTrollBufr (String bufr, String error, String heading, int index, boolean status) {
+
+	public ResponseTrollBufr (List bufr, String error, String heading, int index, boolean status) {
 	    this.bufr = bufr;
 	    this.error = error;
 	    this.heading = heading;
@@ -17,11 +19,11 @@ public class ResponseTrollBufr {
 	    this.status = status;
 	}
 
-	public void setBufr(String bufr) {
+	public void setBufr(List bufr) {
 	    this.bufr = bufr;
 	}
 	
-	public String getBufr() {
+	public List getBufr() {
 	    return this.bufr;
 	}
 
